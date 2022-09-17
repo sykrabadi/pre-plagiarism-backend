@@ -38,7 +38,7 @@ func loadMongoDBConfig() (string, error) {
 	return connStr, nil
 }
 
-func initDB(ctx context.Context) {
+func InitMongoDB(ctx context.Context) (*mongo.Client, error) {
 
 	uri, err := loadMongoDBConfig()
 	if uri == "" {
@@ -48,8 +48,16 @@ func initDB(ctx context.Context) {
 		log.Fatalf("An error encountered with error message %s", err)
 	}
 
-	_, err = mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("An error encountered : %s", err)
 	}
+
+	// check connectivity via ping
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("An error encountered : %s", err)
+	}
+
+	return client, nil
 }
