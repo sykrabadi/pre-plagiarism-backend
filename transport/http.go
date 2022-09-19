@@ -28,4 +28,6 @@ func NewHTTPServer() *mux.Router {
 
 func Test(w http.ResponseWriter, r *http.Request) {
 	log.Println("Calling Test Handler")
+
+	// TODO : Call SendData() from store here
 }

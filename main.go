@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	defer client.DB.Disconnect(ctx)
+	defer client.Client.Disconnect(ctx)
 
 	server := transport.NewHTTPServer()
 	serverAddr := os.Getenv("SERVER_ADDR")

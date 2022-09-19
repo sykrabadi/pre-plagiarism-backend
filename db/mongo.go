@@ -12,8 +12,8 @@ import (
 )
 
 type Mongo struct {
-	DB     *mongo.Client
-	DBName *mongo.Database
+	Client *mongo.Client
+	Db     *mongo.Database
 }
 
 func loadMongoDBConfig() (string, string, error) {
@@ -72,6 +72,6 @@ func InitMongoDB(ctx context.Context) (*Mongo, error) {
 	log.Printf("Successfully connected with number of client : %d", client.NumberSessionsInProgress())
 
 	return &Mongo{
-		DB:     client,
-		DBName: dbName}, nil
+		Client: client,
+		Db:     dbName}, nil
 }
