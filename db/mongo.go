@@ -50,6 +50,9 @@ func InitMongoDB(ctx context.Context) (*Mongo, error) {
 	if uri == "" {
 		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
+	if db == "" {
+		log.Fatal("You must set your 'MONGODB_DB_NAME' environmental variable.")
+	}
 	if err != nil {
 		log.Fatalf("An error encountered with error message %s", err)
 	}

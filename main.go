@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"go-nsq/db"
+	"go-nsq/transport"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -16,8 +18,10 @@ func main() {
 	}
 	defer client.DB.Disconnect(ctx)
 
-	err = http.ListenAndServe(":8080")
+	server := transport.NewHTTPServer()
+	serverAddr := os.Getenv("SERVER_ADDR")
+	err = http.ListenAndServe(serverAddr, server)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error connect to the %s port \n", serverAddr)
 	}
 }
