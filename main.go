@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"go-nsq/application/prefalsification"
 	"go-nsq/db"
 	"go-nsq/store/nosql"
 	"go-nsq/transport"
@@ -19,8 +20,10 @@ func main() {
 	}
 	defer client.Client.Disconnect(ctx)
 
-	nosql.NewNoSQLStore(client)
-	server := transport.NewHTTPServer()
+	mongoDBStore := nosql.NewNoSQLStore(client)
+
+	prefalsificationService := prefalsification.NewPrefalsificationService(mongoDBStore)
+	server := transport.NewHTTPServer(prefalsificationService)
 	serverAddr := os.Getenv("SERVER_ADDR")
 	err = http.ListenAndServe(serverAddr, server)
 	if err != nil {
