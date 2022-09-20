@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"go-nsq/db"
+	"go-nsq/store/nosql"
 	"go-nsq/transport"
 	"log"
 	"net/http"
@@ -18,6 +19,7 @@ func main() {
 	}
 	defer client.Client.Disconnect(ctx)
 
+	nosql.NewNoSQLStore(client)
 	server := transport.NewHTTPServer()
 	serverAddr := os.Getenv("SERVER_ADDR")
 	err = http.ListenAndServe(serverAddr, server)

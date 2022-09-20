@@ -1,35 +1,36 @@
 package store
 
-import (
-	"context"
-	"go-nsq/db"
+type Store interface {
+	DocumentStore() DocumentStore
+}
 
-	"go.mongodb.org/mongo-driver/bson"
-)
-
-type IMongoStore interface {
+type DocumentStore interface {
 	SendData() error
 }
 
-type MongoStore struct {
-	conn *db.Mongo
-}
+// type IMongoStore interface {
+// 	SendData() error
+// }
 
-func NewMongoStore(db *db.Mongo) *MongoStore {
-	return &MongoStore{
-		conn: db,
-	}
-}
+// type MongoStore struct {
+// 	conn *db.Mongo
+// }
 
-func (c *MongoStore) SendData() error {
-	documentCollection := c.conn.Db.Collection("docs")
-	_, err := documentCollection.InsertOne(context.Background(), bson.D{
-		{Key: "name", Value: "TestInsertFromGo"},
-	})
+// func NewMongoStore(db *db.Mongo) *MongoStore {
+// 	return &MongoStore{
+// 		conn: db,
+// 	}
+// }
 
-	if err != nil {
-		return err
-	}
+// func (c *MongoStore) SendData() error {
+// 	documentCollection := c.conn.Db.Collection("docs")
+// 	_, err := documentCollection.InsertOne(context.Background(), bson.D{
+// 		{Key: "name", Value: "TestInsertFromGo"},
+// 	})
 
-	return nil
-}
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
