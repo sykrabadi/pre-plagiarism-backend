@@ -1,6 +1,9 @@
 package prefalsification
 
-import "go-nsq/store"
+import (
+	"context"
+	"go-nsq/store"
+)
 
 type PrefalsificationService struct {
 	DBStore store.Store
@@ -8,4 +11,5 @@ type PrefalsificationService struct {
 
 type IPrefalsificationService interface {
 	SendData() error
+	UpdateData(context.Context, string) error
 }

@@ -23,3 +23,17 @@ func (c *DocumentStoreService) SendData() error {
 
 	return nil
 }
+
+func (c *DocumentStoreService) UpdateData(ctx context.Context, objectID string) error {
+	documentCollection := c.conn.Db.Collection("docs")
+	// TODO : Make contract to ensure the document schema
+	_, err := documentCollection.UpdateOne(ctx,
+		bson.D{},
+		bson.D{},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
