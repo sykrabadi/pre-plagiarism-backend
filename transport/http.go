@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"go-nsq/application/prefalsification"
+	"go-nsq/application/entrypoint"
 	"log"
 	"net/http"
 
@@ -21,15 +21,15 @@ import (
 // }
 
 type server struct {
-	prefalsificationService prefalsification.IPrefalsificationService
+	entryPointService entrypoint.IEntryPointService
 }
 
 func NewHTTPServer(
-	prefalsificationService prefalsification.IPrefalsificationService,
+	entryPointService entrypoint.IEntryPointService,
 ) *mux.Router {
 	router := mux.NewRouter()
 	server := server{
-		prefalsificationService: prefalsificationService,
+		entryPointService: entryPointService,
 	}
 	router.HandleFunc("/sendDocument", server.SendDocument).Methods(http.MethodPost)
 
@@ -37,7 +37,7 @@ func NewHTTPServer(
 }
 
 func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
-	err := s.prefalsificationService.SendData()
+	err := s.entryPointService.SendData()
 	if err != nil {
 		log.Println("Error sending data")
 	}

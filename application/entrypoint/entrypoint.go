@@ -1,4 +1,4 @@
-package prefalsification
+package entrypoint
 
 import (
 	"context"
@@ -7,15 +7,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func NewPrefalsificationService(
+func NewEntryPointService(
 	store store.Store,
-) IPrefalsificationService {
-	return &PrefalsificationService{
+) IEntryPointService {
+	return &EntryPointService{
 		DBStore: store,
 	}
 }
 
-func (c *PrefalsificationService) SendData() error {
+func (c *EntryPointService) SendData() error {
 	err := c.DBStore.DocumentStore().SendData()
 
 	if err != nil {
@@ -25,7 +25,7 @@ func (c *PrefalsificationService) SendData() error {
 	return nil
 }
 
-func (c *PrefalsificationService) UpdateData(ctx context.Context, objectID string) error {
+func (c *EntryPointService) UpdateData(ctx context.Context, objectID string) error {
 	fromHexID, _ := primitive.ObjectIDFromHex(objectID)
 	id := primitive.ObjectID.String(fromHexID)
 	err := c.DBStore.DocumentStore().UpdateData(ctx, id)

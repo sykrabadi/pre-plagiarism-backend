@@ -1,15 +1,15 @@
-package prefalsification
+package entrypoint
 
 import (
 	"context"
 	"go-nsq/store"
 )
 
-type PrefalsificationService struct {
+type EntryPointService struct {
 	DBStore store.Store
 }
 
-type IPrefalsificationService interface {
+type IEntryPointService interface {
 	SendData() error
 	UpdateData(context.Context, string) error
 }
