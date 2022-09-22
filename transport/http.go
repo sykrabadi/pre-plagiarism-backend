@@ -1,24 +1,14 @@
 package transport
 
 import (
+	"encoding/json"
 	"go-nsq/application/entrypoint"
+	"go-nsq/model"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
-
-// func InitRoutes(Mongo *db.Mongo) *mux.Router {
-// 	router := mux.NewRouter()
-// 	router.HandleFunc("/uploadFile", uploadFile).Methods(http.MethodPost)
-// 	return router
-// }
-
-// func uploadFile(w http.ResponseWriter, r *http.Request) {
-// 	db := clien
-// 	response := []byte
-// 	w.Write(response)
-// }
 
 type server struct {
 	entryPointService entrypoint.IEntryPointService
@@ -36,10 +26,22 @@ func NewHTTPServer(
 	return router
 }
 
+func httpWriteResponse(w http.ResponseWriter, response interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(response)
+}
+
 func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
 	err := s.entryPointService.SendData()
+
 	if err != nil {
 		log.Println("Error sending data")
+		httpWriteResponse(w, &model.ServerResponse{
+			Message: "Error Sending Data",
+		})
 	}
 	log.Println("Upload Document Success")
+	httpWriteResponse(w, &model.ServerResponse{
+		Message: "Success",
+	})
 }

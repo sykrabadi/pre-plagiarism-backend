@@ -3,6 +3,7 @@ package nosql
 import (
 	"context"
 	"go-nsq/db"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -11,16 +12,16 @@ type DocumentStoreService struct {
 	conn *db.Mongo
 }
 
-func (c *DocumentStoreService) SendData() error {
+func (c *DocumentStoreService) SendData(documentName string) error {
 	documentCollection := c.conn.Db.Collection("docs")
-	_, err := documentCollection.InsertOne(context.Background(), bson.D{
-		{Key: "name", Value: "TestInsertFromGo"},
+	res, err := documentCollection.InsertOne(context.Background(), bson.D{
+		{Key: "name", Value: documentName},
 	})
 
 	if err != nil {
 		return err
 	}
-
+	log.Printf("Success insert document with ObjectID %v \n", res.InsertedID)
 	return nil
 }
 

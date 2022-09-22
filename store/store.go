@@ -9,6 +9,6 @@ type Store interface {
 }
 
 type DocumentStore interface {
-	SendData() error
+	SendData(string) error
 	UpdateData(context.Context, string) error
 }

@@ -5,7 +5,7 @@ import (
 	"go-nsq/application/mq"
 	"go-nsq/store"
 
-	"github.com/nsqio/go-nsq"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,22 +19,23 @@ func NewEntryPointService(
 }
 
 func (c *EntryPointService) SendData() error {
-	err := c.DBStore.DocumentStore().SendData()
+	docName := uuid.New().String()
+	err := c.DBStore.DocumentStore().SendData(docName)
 
 	if err != nil {
 		return err
 	}
-	config := nsq.NewConfig()
-	publisher, err := nsq.NewProducer("127.0.0.1:4150", config)
-	if err != nil {
-		return err
-	}
+	// config := nsq.NewConfig()
+	// publisher, err := nsq.NewProducer("127.0.0.1:4150", config)
+	// if err != nil {
+	// 	return err
+	// }
 
-	msg := []byte("test publuish")
-	err = publisher.Publish("test", msg)
-	if err != nil {
-		return err
-	}
+	// msg := []byte("test publuish")
+	// err = publisher.Publish("test", msg)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
