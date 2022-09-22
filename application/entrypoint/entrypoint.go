@@ -2,6 +2,7 @@ package entrypoint
 
 import (
 	"context"
+	"go-nsq/application/mq"
 	"go-nsq/store"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -9,6 +10,7 @@ import (
 
 func NewEntryPointService(
 	store store.Store,
+	mq mq.Client,
 ) IEntryPointService {
 	return &EntryPointService{
 		DBStore: store,
@@ -18,6 +20,12 @@ func NewEntryPointService(
 func (c *EntryPointService) SendData() error {
 	err := c.DBStore.DocumentStore().SendData()
 
+	if err != nil {
+		return err
+	}
+
+	msg := []byte("test publuish")
+	err = c.MQ.Publish("test", msg)
 	if err != nil {
 		return err
 	}

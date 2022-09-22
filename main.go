@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"go-nsq/application/entrypoint"
+	"go-nsq/application/mq"
 	"go-nsq/db"
 	"go-nsq/store/nosql"
 	"go-nsq/transport"
@@ -22,7 +23,9 @@ func main() {
 
 	mongoDBStore := nosql.NewNoSQLStore(client)
 
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore)
+	mq := mq.NewMQClient()
+
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, mq)
 	server := transport.NewHTTPServer(entryPointService)
 	serverAddr := os.Getenv("SERVER_ADDR")
 	err = http.ListenAndServe(serverAddr, server)
