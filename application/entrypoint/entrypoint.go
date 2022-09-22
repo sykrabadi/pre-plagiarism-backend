@@ -5,6 +5,7 @@ import (
 	"go-nsq/application/mq"
 	"go-nsq/store"
 
+	"github.com/nsqio/go-nsq"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -23,9 +24,14 @@ func (c *EntryPointService) SendData() error {
 	if err != nil {
 		return err
 	}
+	config := nsq.NewConfig()
+	publisher, err := nsq.NewProducer("127.0.0.1:4150", config)
+	if err != nil {
+		return err
+	}
 
 	msg := []byte("test publuish")
-	err = c.MQ.Publish("test", msg)
+	err = publisher.Publish("test", msg)
 	if err != nil {
 		return err
 	}
