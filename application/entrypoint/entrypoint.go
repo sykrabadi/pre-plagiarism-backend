@@ -3,6 +3,7 @@ package entrypoint
 import (
 	"context"
 	"go-nsq/application/mq"
+	"go-nsq/db"
 	"go-nsq/store"
 
 	"github.com/google/uuid"
@@ -12,9 +13,12 @@ import (
 func NewEntryPointService(
 	store store.Store,
 	mq mq.Client,
+	minio db.Minio,
 ) IEntryPointService {
 	return &EntryPointService{
 		DBStore: store,
+		Minio:   minio,
+		MQ:      mq,
 	}
 }
 
@@ -31,11 +35,11 @@ func (c *EntryPointService) SendData() error {
 	// 	return err
 	// }
 
-	// msg := []byte("test publuish")
-	// err = publisher.Publish("test", msg)
-	// if err != nil {
-	// 	return err
-	// }
+	msg := []byte("test publuish")
+	err = c.MQ.Publish("TESTAGAIN", msg)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

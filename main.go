@@ -24,8 +24,11 @@ func main() {
 	mongoDBStore := nosql.NewNoSQLStore(client)
 
 	mq := mq.NewMQClient()
-
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, mq)
+	minio, err := db.InitMinio(ctx)
+	if err != nil {
+		log.Fatalf("Error intialize Minio Client")
+	}
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, mq, *minio)
 	server := transport.NewHTTPServer(entryPointService)
 	serverAddr := os.Getenv("SERVER_ADDR")
 	err = http.ListenAndServe(serverAddr, server)
