@@ -5,6 +5,7 @@ import (
 	"go-nsq/application/entrypoint"
 	"go-nsq/application/mq"
 	"go-nsq/db"
+	"go-nsq/store/minio"
 	"go-nsq/store/nosql"
 	"go-nsq/transport"
 	"log"
@@ -24,11 +25,11 @@ func main() {
 	mongoDBStore := nosql.NewNoSQLStore(client)
 
 	mq := mq.NewMQClient()
-	minio, err := db.InitMinio(ctx)
+	minio, err := minio.InitMinioService(ctx, "documents")
 	if err != nil {
 		log.Fatalf("Error intialize Minio Client")
 	}
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, mq, *minio)
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, mq, minio)
 	server := transport.NewHTTPServer(entryPointService)
 	serverAddr := os.Getenv("SERVER_ADDR")
 	err = http.ListenAndServe(serverAddr, server)

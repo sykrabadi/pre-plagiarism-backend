@@ -11,8 +11,8 @@ services:
       - MINIO_ROOT_PASSWORD=superadmin
     command: server /data --console-address ":9001"
     # use volumes later
-    # volumes:
-    #   - 
+    volumes:
+      - ./docker/minio:/data
   nsqlookupd:
     image: nsqio/nsq
     container_name: nsqlookupd

@@ -3,8 +3,8 @@ package entrypoint
 import (
 	"context"
 	"go-nsq/application/mq"
-	"go-nsq/db"
 	"go-nsq/store"
+	"go-nsq/store/minio"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,12 +13,12 @@ import (
 func NewEntryPointService(
 	store store.Store,
 	mq mq.Client,
-	minio db.Minio,
+	minio minio.MinioService,
 ) IEntryPointService {
 	return &EntryPointService{
 		DBStore: store,
-		Minio:   minio,
 		MQ:      mq,
+		Minio:   minio,
 	}
 }
 
@@ -34,6 +34,7 @@ func (c *EntryPointService) SendData() error {
 	// if err != nil {
 	// 	return err
 	// }
+	c.Minio.UploadFile("2207.00507.pdf")
 
 	msg := []byte("test publuish")
 	err = c.MQ.Publish("TESTAGAIN", msg)

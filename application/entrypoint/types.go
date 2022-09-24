@@ -3,14 +3,14 @@ package entrypoint
 import (
 	"context"
 	"go-nsq/application/mq"
-	"go-nsq/db"
 	"go-nsq/store"
+	"go-nsq/store/minio"
 )
 
 type EntryPointService struct {
 	DBStore store.Store
 	MQ      mq.Client
-	Minio   db.Minio
+	Minio   minio.MinioService
 }
 
 type IEntryPointService interface {
