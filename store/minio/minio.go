@@ -3,6 +3,7 @@ package minio
 import (
 	"context"
 	"log"
+	"mime/multipart"
 	"os"
 
 	"github.com/minio/minio-go/v7"
@@ -15,7 +16,7 @@ type Minio struct {
 }
 
 type MinioService interface {
-	UploadFile(string)
+	UploadFile(*multipart.FileHeader)
 }
 
 func InitMinioService(ctx context.Context, bucket string) (MinioService, error) {
@@ -49,22 +50,18 @@ func InitMinioService(ctx context.Context, bucket string) (MinioService, error) 
 	}, nil
 }
 
-func (m *Minio) UploadFile(objectName string) {
-	file, err := os.Open(objectName)
+func (m *Minio) UploadFile(object *multipart.FileHeader) {
+	file, err := object.Open()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	defer file.Close()
 
-	fileStat, err := file.Stat()
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	fileName := object.Filename
 	bucketName := os.Getenv("MINIO_BUCKET")
 
-	info, err := m.client.PutObject(context.TODO(), bucketName, objectName, file, fileStat.Size(), minio.PutObjectOptions{})
+	info, err := m.client.PutObject(context.TODO(), bucketName, fileName, file, object.Size, minio.PutObjectOptions{})
 	if err != nil {
 		log.Println(err)
 		return

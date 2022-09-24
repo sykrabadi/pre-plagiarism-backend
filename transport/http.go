@@ -32,7 +32,17 @@ func httpWriteResponse(w http.ResponseWriter, response interface{}) {
 }
 
 func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
-	err := s.entryPointService.SendData()
+	if err := r.ParseMultipartForm(4096); err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+	}
+
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+	err = s.entryPointService.SendData(fileHeader)
 
 	if err != nil {
 		log.Println("Error sending data")

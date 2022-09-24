@@ -5,8 +5,8 @@ import (
 	"go-nsq/application/mq"
 	"go-nsq/store"
 	"go-nsq/store/minio"
+	"mime/multipart"
 
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,19 +22,15 @@ func NewEntryPointService(
 	}
 }
 
-func (c *EntryPointService) SendData() error {
-	docName := uuid.New().String()
-	err := c.DBStore.DocumentStore().SendData(docName)
+func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
+	//docName := uuid.New().String()
+	err := c.DBStore.DocumentStore().SendData(file.Filename)
 
 	if err != nil {
 		return err
 	}
-	// config := nsq.NewConfig()
-	// publisher, err := nsq.NewProducer("127.0.0.1:4150", config)
-	// if err != nil {
-	// 	return err
-	// }
-	c.Minio.UploadFile("2205.10133.pdf")
+
+	c.Minio.UploadFile(file)
 
 	msg := []byte("test publuish")
 	err = c.MQ.Publish("TESTAGAIN", msg)
