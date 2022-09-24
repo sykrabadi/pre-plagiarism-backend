@@ -34,7 +34,7 @@ func (c *EntryPointService) SendData() error {
 	// if err != nil {
 	// 	return err
 	// }
-	c.Minio.UploadFile("2207.00507.pdf")
+	c.Minio.UploadFile("2205.10133.pdf")
 
 	msg := []byte("test publuish")
 	err = c.MQ.Publish("TESTAGAIN", msg)

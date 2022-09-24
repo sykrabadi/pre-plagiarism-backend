@@ -7,12 +7,9 @@ services:
       - "9001:9001"
       - "9000:9000"
     environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=superadmin
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY_ID}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_ACCESS_KEY}
     command: server /data --console-address ":9001"
-    # use volumes later
-    volumes:
-      - ./docker/minio:/data
   nsqlookupd:
     image: nsqio/nsq
     container_name: nsqlookupd
