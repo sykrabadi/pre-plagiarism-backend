@@ -8,6 +8,12 @@ type Client interface {
 	Publish(string, []byte) error
 }
 
+type Message struct {
+	Timestamp    string
+	FileObjectID string
+	FileName     string
+}
+
 type NSQClient struct {
 	config nsq.Config
 }
@@ -21,7 +27,7 @@ func NewMQClient() Client {
 
 func (mq NSQClient) Publish(topic string, message []byte) error {
 	//config := nsq.NewConfig()
-	publisher, err := nsq.NewProducer("localhost:4150", &mq.config)
+	publisher, err := nsq.NewProducer("127.0.0.1:4150", &mq.config)
 	if err != nil {
 		return err
 	}

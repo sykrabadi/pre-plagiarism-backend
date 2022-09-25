@@ -20,7 +20,7 @@ services:
   nsqd:
     image: nsqio/nsq
     container_name: nsqd
-    command: /nsqd --broadcast-address=127.0.0.1 --lookupd-tcp-address=nsqlookupd:4160
+    command: /nsqd --broadcast-address=nsqd --lookupd-tcp-address=nsqlookupd:4160
     depends_on:
       - nsqlookupd
     ports:

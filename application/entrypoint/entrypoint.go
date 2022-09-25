@@ -2,10 +2,12 @@ package entrypoint
 
 import (
 	"context"
+	"encoding/json"
 	"go-nsq/application/mq"
 	"go-nsq/store"
 	"go-nsq/store/minio"
 	"mime/multipart"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -35,9 +37,17 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
+	message := mq.Message{
+		Timestamp:    time.Now().String(),
+		FileName:     fileName,
+		FileObjectID: fileObjectID,
+	}
 
-	msg := []byte(fileName)
-	err = c.MQ.Publish("TESTAGAIN", msg)
+	res, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+	err = c.MQ.Publish("TESTAGAIN", res)
 	if err != nil {
 		return err
 	}
