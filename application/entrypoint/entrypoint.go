@@ -23,16 +23,20 @@ func NewEntryPointService(
 }
 
 func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
-	//docName := uuid.New().String()
-	err := c.DBStore.DocumentStore().SendData(file.Filename)
+	// TODO : Use fileObjectID as value to be sent to mq
+	fileObjectID, err := c.DBStore.DocumentStore().SendData(file.Filename)
 
 	if err != nil {
 		return err
 	}
 
-	c.Minio.UploadFile(file)
+	fileName, err := c.Minio.UploadFile(file)
 
-	msg := []byte("test publuish")
+	if err != nil {
+		return err
+	}
+
+	msg := []byte(fileName)
 	err = c.MQ.Publish("TESTAGAIN", msg)
 	if err != nil {
 		return err

@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -16,7 +17,7 @@ type Minio struct {
 }
 
 type MinioService interface {
-	UploadFile(*multipart.FileHeader)
+	UploadFile(*multipart.FileHeader) (string, error)
 }
 
 func InitMinioService(ctx context.Context, bucket string) (MinioService, error) {
@@ -50,22 +51,21 @@ func InitMinioService(ctx context.Context, bucket string) (MinioService, error) 
 	}, nil
 }
 
-func (m *Minio) UploadFile(object *multipart.FileHeader) {
+func (m *Minio) UploadFile(object *multipart.FileHeader) (string, error) {
 	file, err := object.Open()
 	if err != nil {
 		log.Println(err)
-		return
+		return "", err
 	}
 	defer file.Close()
 
-	fileName := object.Filename
+	fileName := uuid.New().String()
 	bucketName := os.Getenv("MINIO_BUCKET")
 
-	info, err := m.client.PutObject(context.TODO(), bucketName, fileName, file, object.Size, minio.PutObjectOptions{})
+	_, err = m.client.PutObject(context.TODO(), bucketName, fileName, file, object.Size, minio.PutObjectOptions{})
 	if err != nil {
 		log.Println(err)
-		return
+		return "", err
 	}
-	log.Println(info.Location)
-	log.Printf("Successfully uploaded at: %v \n", info.Location)
+	return fileName, nil
 }

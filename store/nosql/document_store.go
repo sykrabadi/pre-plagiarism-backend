@@ -2,6 +2,7 @@ package nosql
 
 import (
 	"context"
+	"fmt"
 	"go-nsq/db"
 	"log"
 
@@ -12,17 +13,18 @@ type DocumentStoreService struct {
 	conn *db.Mongo
 }
 
-func (c *DocumentStoreService) SendData(documentName string) error {
+func (c *DocumentStoreService) SendData(documentName string) (string, error) {
 	documentCollection := c.conn.Db.Collection("docs")
 	res, err := documentCollection.InsertOne(context.Background(), bson.D{
 		{Key: "name", Value: documentName},
 	})
+	fileObjectID := fmt.Sprint(res.InsertedID)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 	log.Printf("Success insert document with ObjectID %v \n", res.InsertedID)
-	return nil
+	return fileObjectID, nil
 }
 
 func (c *DocumentStoreService) UpdateData(ctx context.Context, objectID string) error {
