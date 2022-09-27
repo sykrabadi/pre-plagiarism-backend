@@ -34,3 +34,8 @@ services:
       - nsqlookupd  
     ports:
       - "4171:4171"
+  redis:
+    image: redis:7.0.5-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"

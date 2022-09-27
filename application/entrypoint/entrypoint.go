@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"go-nsq/application/mq"
+	"go-nsq/application/mq/redis"
 	"go-nsq/store"
 	"go-nsq/store/minio"
 	"mime/multipart"
@@ -16,11 +17,13 @@ func NewEntryPointService(
 	store store.Store,
 	mq mq.Client,
 	minio minio.MinioService,
+	redisPubSub redis.IRedisClient,
 ) IEntryPointService {
 	return &EntryPointService{
-		DBStore: store,
-		MQ:      mq,
-		Minio:   minio,
+		DBStore:     store,
+		MQ:          mq,
+		Minio:       minio,
+		RedisPubSub: redisPubSub,
 	}
 }
 
