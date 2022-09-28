@@ -1,5 +1,9 @@
 package mq
 
-type MQService interface{
-	PublishMessage()
+import "time"
+
+type Message struct {
+	FileName     string
+	FileObjectID string
+	Timestamp    time.Duration
 }

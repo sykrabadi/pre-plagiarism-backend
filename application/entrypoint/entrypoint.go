@@ -3,7 +3,7 @@ package entrypoint
 import (
 	"context"
 	"encoding/json"
-	"go-nsq/application/mq"
+	nsqmq "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/store"
 	"go-nsq/store/minio"
@@ -15,13 +15,13 @@ import (
 
 func NewEntryPointService(
 	store store.Store,
-	mq mq.Client,
+	nsq nsqmq.INSQClient,
 	minio minio.MinioService,
 	redisPubSub redis.IRedisClient,
 ) IEntryPointService {
 	return &EntryPointService{
 		DBStore:     store,
-		MQ:          mq,
+		NSQ:         nsq,
 		Minio:       minio,
 		RedisPubSub: redisPubSub,
 	}
@@ -40,7 +40,7 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
-	message := mq.Message{
+	message := nsqmq.Message{
 		Timestamp:    time.Now().String(),
 		FileName:     fileName,
 		FileObjectID: fileObjectID,
@@ -50,7 +50,7 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
-	err = c.MQ.Publish("TESTAGAIN", res)
+	err = c.NSQ.Publish("TESTAGAIN", res)
 	if err != nil {
 		return err
 	}

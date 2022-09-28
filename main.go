@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"go-nsq/application/entrypoint"
-	"go-nsq/application/mq"
+	"go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/db"
 	"go-nsq/store/minio"
@@ -25,13 +25,13 @@ func main() {
 
 	mongoDBStore := nosql.NewNoSQLStore(client)
 
-	mq := mq.NewMQClient()
+	nsq := nsq.NewNSQClient()
 	minio, err := minio.InitMinioService(ctx, "documents")
 	if err != nil {
 		log.Fatalf("Error intialize Minio Client")
 	}
 	redis, err := redis.NewRedisClient()
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, mq, minio, redis)
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, nsq, minio, redis)
 	server := transport.NewHTTPServer(entryPointService)
 	serverAddr := os.Getenv("SERVER_ADDR")
 	err = http.ListenAndServe(serverAddr, server)

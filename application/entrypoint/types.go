@@ -2,7 +2,7 @@ package entrypoint
 
 import (
 	"context"
-	"go-nsq/application/mq"
+	NSQ "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/store"
 	"go-nsq/store/minio"
@@ -11,7 +11,7 @@ import (
 
 type EntryPointService struct {
 	DBStore     store.Store
-	MQ          mq.Client
+	NSQ         NSQ.INSQClient
 	Minio       minio.MinioService
 	RedisPubSub redis.IRedisClient
 }

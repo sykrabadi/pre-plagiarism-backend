@@ -2,12 +2,21 @@ package redis
 
 import (
 	"context"
+	"time"
+
+	"go-nsq/application/mq"
 
 	"github.com/go-redis/redis/v9"
 )
 
+type Message struct {
+	FileName     string
+	FileObjectID string
+	Timestamp    time.Duration
+}
+
 type IRedisClient interface {
-	Publish(string) error
+	Publish(*mq.Message) error
 }
 
 type RedisClient struct {
@@ -34,6 +43,12 @@ func NewRedisClient() (IRedisClient, error) {
 	}, nil
 }
 
-func (r RedisClient) Publish(string) error {
+func (r RedisClient) Publish(Message *mq.Message) error {
+	err := r.client.Publish(context.TODO(), "sendPDF", &Message).Err()
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
