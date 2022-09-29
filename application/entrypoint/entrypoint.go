@@ -3,6 +3,7 @@ package entrypoint
 import (
 	"context"
 	"encoding/json"
+	"go-nsq/application/mq"
 	nsqmq "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/store"
@@ -54,6 +55,11 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
+	err = c.RedisPubSub.Publish(&mq.Message{
+		FileName:     fileName,
+		FileObjectID: fileObjectID,
+		Timestamp:    time.Now().String(),
+	})
 
 	return nil
 }
