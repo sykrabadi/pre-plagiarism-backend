@@ -55,6 +55,7 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
+	// Code below successfully 
 	err = c.RedisPubSub.Publish(&mq.Message{
 		FileName:     fileName,
 		FileObjectID: fileObjectID,

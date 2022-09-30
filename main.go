@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"go-nsq/application/entrypoint"
-	"go-nsq/application/mq/nsq"
+	nsqmq "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/db"
 	"go-nsq/store/minio"
@@ -12,11 +12,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
+// TODO : Seperate current function calls to concurrent
+
 func main() {
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx := context.TODO()
 	client, err := db.InitMongoDB(ctx)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -25,13 +26,13 @@ func main() {
 
 	mongoDBStore := nosql.NewNoSQLStore(client)
 
-	nsq := nsq.NewNSQClient()
+	NSQClient := nsqmq.NewNSQClient()
 	minio, err := minio.InitMinioService(ctx, "documents")
 	if err != nil {
 		log.Fatalf("Error intialize Minio Client")
 	}
 	redis, err := redis.NewRedisClient()
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, nsq, minio, redis)
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redis)
 	server := transport.NewHTTPServer(entryPointService)
 	serverAddr := os.Getenv("SERVER_ADDR")
 	err = http.ListenAndServe(serverAddr, server)
