@@ -1,4 +1,4 @@
-package main
+package consumer
 
 import (
 	nsqmq "go-nsq/application/mq/nsq"
@@ -9,6 +9,21 @@ import (
 
 	"github.com/nsqio/go-nsq"
 )
+
+type Handler struct {
+}
+
+func InitNSQSubscriber(
+	client nsqmq.INSQClient,
+) {
+	go func() {
+		err := client.Subscribe("TESTAGAIN")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+}
 
 func main() {
 	nsqSubscriber, err := nsq.NewConsumer("TESTAGAIN", "channel", nsq.NewConfig())

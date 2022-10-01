@@ -15,9 +15,9 @@ type server struct {
 }
 
 func NewHTTPServer(
+	router *mux.Router,
 	entryPointService entrypoint.IEntryPointService,
-) *mux.Router {
-	router := mux.NewRouter()
+) http.Handler {
 	server := server{
 		entryPointService: entryPointService,
 	}

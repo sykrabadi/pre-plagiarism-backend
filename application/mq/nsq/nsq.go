@@ -8,7 +8,7 @@ import (
 
 type INSQClient interface {
 	Publish(string, []byte) error
-	//Subscribe(string) error
+	Subscribe(string) error
 }
 
 type Message struct {
@@ -60,6 +60,17 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (n NSQClient) Subscribe(topic string) error {
+	nsqSubscriber, err := nsq.NewConsumer(topic, "channel", &n.config)
+	if err != nil {
+		return err
+	}
+	nsqSubscriber.ConnectToNSQLookupd("localhost:4161")
+	nsqSubscriber.AddHandler(&NSQMessageHandler{})
 
 	return nil
 }
