@@ -19,6 +19,7 @@ type Message struct {
 
 type NSQMessageHandler struct{}
 
+// TODO : Apply message format from MQ to update the specified document at mongodb
 func processMessage(body []byte) error {
 	log.Println(body)
 	return nil
@@ -50,7 +51,6 @@ func NewNSQClient() INSQClient {
 }
 
 func (n NSQClient) Publish(topic string, message []byte) error {
-	//config := nsq.NewConfig()
 	publisher, err := nsq.NewProducer("127.0.0.1:4150", &n.config)
 	if err != nil {
 		return err
@@ -69,8 +69,10 @@ func (n NSQClient) Subscribe(topic string) error {
 	if err != nil {
 		return err
 	}
-	nsqSubscriber.ConnectToNSQLookupd("localhost:4161")
 	nsqSubscriber.AddHandler(&NSQMessageHandler{})
+
+	// either localhost or 127.0.0.1 as address are acceptable
+	nsqSubscriber.ConnectToNSQLookupd("localhost:4161")
 
 	return nil
 }
