@@ -49,6 +49,9 @@ func main() {
 		log.Fatalf("Error intialize Minio Client")
 	}
 	redis, err := redis.NewRedisClient()
+	if err != nil {
+		log.Fatalf("Error intialize Redis Client")
+	}
 	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redis)
 
 	consumer.InitNSQSubscriber(NSQClient)

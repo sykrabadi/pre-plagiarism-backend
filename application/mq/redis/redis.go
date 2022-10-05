@@ -2,11 +2,10 @@ package redis
 
 import (
 	"context"
+	"log"
 	"time"
 
-	"go-nsq/application/mq"
-
-	"github.com/go-redis/redis/v9"
+	"github.com/go-redis/redis/v8"
 )
 
 type Message struct {
@@ -16,7 +15,7 @@ type Message struct {
 }
 
 type IRedisClient interface {
-	Publish(*mq.Message) error
+	Publish(string, []byte) error
 }
 
 type RedisClient struct {
@@ -25,9 +24,9 @@ type RedisClient struct {
 
 func NewRedisClient() (IRedisClient, error) {
 	config := redis.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "",
-		DB:       0,
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
 	}
 
 	rdb := redis.NewClient(&config)
@@ -35,6 +34,7 @@ func NewRedisClient() (IRedisClient, error) {
 	_, err := rdb.Ping(context.TODO()).Result()
 
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -43,10 +43,11 @@ func NewRedisClient() (IRedisClient, error) {
 	}, nil
 }
 
-func (r RedisClient) Publish(Message *mq.Message) error {
-	err := r.client.Publish(context.TODO(), "sendPDF", &Message).Err()
+func (r RedisClient) Publish(Topic string, Message []byte) error {
+	err := r.client.Publish(context.TODO(), "sendPDF", Message).Err()
 
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 

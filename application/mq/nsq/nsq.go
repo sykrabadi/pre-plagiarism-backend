@@ -2,6 +2,7 @@ package nsq
 
 import (
 	"log"
+	"time"
 
 	nsq "github.com/nsqio/go-nsq"
 )
@@ -45,6 +46,8 @@ type NSQClient struct {
 
 func NewNSQClient() INSQClient {
 	config := nsq.NewConfig()
+	// after adding config.DialTimeout, NSQ will not throw i/o timeout anymore
+	config.DialTimeout = 3 * time.Second
 	return &NSQClient{
 		config: *config,
 	}
@@ -71,7 +74,7 @@ func (n NSQClient) Subscribe(topic string) error {
 	}
 	nsqSubscriber.AddHandler(&NSQMessageHandler{})
 
-	// either localhost or 127.0.0.1 as address are acceptable
+	// either localhost or 127.0.0.1 as address are acceptable, but prefere 127.0.0.1 for consistency
 	nsqSubscriber.ConnectToNSQLookupd("127.0.0.1:4161")
 
 	return nil
