@@ -72,7 +72,7 @@ func (n NSQClient) Subscribe(topic string) error {
 	nsqSubscriber.AddHandler(&NSQMessageHandler{})
 
 	// either localhost or 127.0.0.1 as address are acceptable
-	nsqSubscriber.ConnectToNSQLookupd("localhost:4161")
+	nsqSubscriber.ConnectToNSQLookupd("127.0.0.1:4161")
 
 	return nil
 }
