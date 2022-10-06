@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"go-nsq/application/mq"
 	"log"
 	"time"
 
@@ -63,7 +65,16 @@ func (r RedisClient) Subscribe(Channel string) error {
 		log.Printf("Error receive message with error %v", err)
 		return err
 	}
-	log.Printf("Receiving message from Redis PubSub with payload : %v ", msg.Payload)
+	var resp mq.Message
+	err = json.Unmarshal([]byte(msg.Payload), &resp)
+	if err != nil {
+		log.Println("Fail to unmarshall json at Redis PubSub Subscription")
+		return err
+	}
+	log.Printf("Logging message from Redis PubSub with payload : \n")
+	log.Println(resp.FileName)
+	log.Println(resp.FileObjectID)
+	log.Println(resp.Timestamp)
 
 	return nil
 

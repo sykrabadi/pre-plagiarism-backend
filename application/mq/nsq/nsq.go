@@ -2,6 +2,7 @@ package nsq
 
 import (
 	"encoding/json"
+	"go-nsq/application/mq"
 	"log"
 	"time"
 
@@ -40,11 +41,21 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
+	var response mq.Message
 	// do whatever actual message processing is desired
-	err := processMessage(m.Body)
+	err := json.Unmarshal(m.Body, &response)
+	if err != nil {
+		log.Printf("Error when unmarshalling json at NSQMessagehandler with error : %v", err)
+		return err
+	}
+
+	log.Println("Logging message from NSQMessageHandler")
+	log.Println(response.FileName)
+	log.Println(response.FileObjectID)
+	log.Println(response.Timestamp)
 
 	// Returning a non-nil error will automatically send a REQ command to NSQ to re-queue the message.
-	return err
+	return nil
 }
 
 type NSQClient struct {
@@ -66,12 +77,12 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 		return err
 	}
 
-	payload, err := json.Marshal(message)
-	if err != nil {
-		log.Printf("Error marshalling json with error %v", err)
-		return err
-	}
-	err = publisher.Publish(topic, payload)
+	// payload, err := json.Marshal(message)
+	// if err != nil {
+	// 	log.Printf("Error marshalling json with error %v", err)
+	// 	return err
+	// }
+	err = publisher.Publish(topic, message)
 	if err != nil {
 		return err
 	}
