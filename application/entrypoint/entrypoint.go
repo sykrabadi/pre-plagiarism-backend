@@ -3,6 +3,7 @@ package entrypoint
 import (
 	"context"
 	"encoding/json"
+	"go-nsq/application/mq"
 	nsqmq "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/store"
@@ -41,7 +42,7 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
-	message := nsqmq.Message{
+	message := mq.Message{
 		Timestamp:    time.Now().String(),
 		FileName:     fileName,
 		FileObjectID: fileObjectID,
@@ -49,6 +50,7 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 
 	res, err := json.Marshal(message)
 	if err != nil {
+		log.Println("Error marshalling to json payload at EntryPointService-SendData")
 		return err
 	}
 	err = c.NSQ.Publish("TESTAGAIN", res)

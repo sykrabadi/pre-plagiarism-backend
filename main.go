@@ -48,13 +48,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error intialize Minio Client")
 	}
-	redis, err := redis.NewRedisClient()
+	redisPubSubClient, err := redis.NewRedisClient()
 	if err != nil {
 		log.Fatalf("Error intialize Redis Client")
 	}
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redis)
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient)
 
 	consumer.InitNSQSubscriber(NSQClient)
+	consumer.InitRedisPubSubSubscriber(redisPubSubClient)
 
 	go serveHTTP(
 		":8080",

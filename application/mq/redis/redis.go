@@ -16,6 +16,7 @@ type Message struct {
 
 type IRedisClient interface {
 	Publish(string, []byte) error
+	Subscribe(string) error
 }
 
 type RedisClient struct {
@@ -52,4 +53,18 @@ func (r RedisClient) Publish(Topic string, Message []byte) error {
 	}
 
 	return nil
+}
+
+func (r RedisClient) Subscribe(Channel string) error {
+	subscriber := r.client.Subscribe(context.TODO(), Channel)
+
+	msg, err := subscriber.ReceiveMessage(context.TODO())
+	if err != nil {
+		log.Printf("Error receive message with error %v", err)
+		return err
+	}
+	log.Printf("Receiving message from Redis PubSub with payload : %v ", msg.Payload)
+
+	return nil
+
 }

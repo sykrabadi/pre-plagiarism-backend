@@ -1,7 +1,7 @@
 package mq
 
 type Message struct {
-	FileName     string
-	FileObjectID string
-	Timestamp    string
+	FileName     string `json:"file_name"`
+	FileObjectID string `json:"file_object_id"`
+	Timestamp    string `json:"timestamp"`
 }

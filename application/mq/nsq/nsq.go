@@ -1,6 +1,7 @@
 package nsq
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
@@ -22,7 +23,13 @@ type NSQMessageHandler struct{}
 
 // TODO : Apply message format from MQ to update the specified document at mongodb
 func processMessage(body []byte) error {
-	log.Println(body)
+	// var response Message
+	// err := json.Unmarshal(body, &response)
+	// if err != nil {
+	// 	log.Printf("Error unmarshall from NSQ json with error %v", err)
+	// 	return err
+	// }
+	log.Printf("Receiving message from NSQ with payload : %v ", string(body))
 	return nil
 }
 
@@ -59,7 +66,12 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 		return err
 	}
 
-	err = publisher.Publish(topic, message)
+	payload, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Error marshalling json with error %v", err)
+		return err
+	}
+	err = publisher.Publish(topic, payload)
 	if err != nil {
 		return err
 	}
