@@ -56,8 +56,12 @@ func main() {
 	rabbitMQClient, err := rabbitmq.NewRabbitMQClient()
 	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient, rabbitMQClient)
 
-	consumer.InitNSQSubscriber(NSQClient)
-	consumer.InitRedisPubSubSubscriber(redisPubSubClient)
+	go func() {
+
+		consumer.InitNSQSubscriber(NSQClient)
+		consumer.InitRedisPubSubSubscriber(redisPubSubClient)
+		consumer.InitRabbitMQSubscriber(rabbitMQClient)
+	}()
 
 	go serveHTTP(
 		":8080",

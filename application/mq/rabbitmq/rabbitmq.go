@@ -1,6 +1,8 @@
 package rabbitmq
 
 import (
+	"encoding/json"
+	"go-nsq/application/mq"
 	"log"
 	"os"
 
@@ -8,7 +10,8 @@ import (
 )
 
 type IRabbitMQClient interface {
-	Publish() error
+	Publish(string, []byte) error
+	Subscribe(string) error
 }
 
 func failOnError(err error, msg string) {
@@ -35,7 +38,7 @@ func NewRabbitMQClient() (IRabbitMQClient, error) {
 	}, nil
 }
 
-func (m RabbitMQClient) Publish() error {
+func (m RabbitMQClient) Publish(topic string, message []byte) error {
 	ch, err := m.client.Channel()
 	if err != nil {
 		failOnError(err, "Failed to open a channel")
@@ -43,7 +46,7 @@ func (m RabbitMQClient) Publish() error {
 	}
 	defer ch.Close()
 	q, err := ch.QueueDeclare(
-		"TESTAGAIN",
+		topic,
 		false,
 		false,
 		false,
@@ -56,15 +59,15 @@ func (m RabbitMQClient) Publish() error {
 		return err
 	}
 
-	body := "Sending message from RabbitMQ"
+	//body := "Sending message from RabbitMQ"
 	err = ch.Publish(
 		"",
 		q.Name,
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
+			ContentType: "application/json",
+			Body:        message,
 		},
 	)
 	if err != nil {
@@ -72,6 +75,54 @@ func (m RabbitMQClient) Publish() error {
 		failOnError(err, "Failed to publish a message")
 		return err
 	}
-	log.Printf(" [x] Congrats, sending message: %s", body)
+	log.Printf(" [x] Congrats, sending message: %s", message)
+	return nil
+}
+
+func (m RabbitMQClient) Subscribe(topic string) error {
+	ch, err := m.client.Channel()
+	if err != nil {
+		failOnError(err, "Failed to open a channel")
+		return err
+	}
+
+	q, err := ch.QueueDeclare(
+		topic,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		failOnError(err, "Failed to open a channel")
+		return err
+	}
+	response, err := ch.Consume(
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		failOnError(err, "Failed to open a channel")
+		return err
+	}
+
+	var data mq.Message
+	for d := range response {
+		err := json.Unmarshal(d.Body, &data)
+		if err != nil {
+			log.Printf("Error unmarshalling json at RabbitMQ-Subscribe with error : %v", err)
+			return err
+		}
+		log.Println("Logging message from RabbitMQ-Subscriber")
+		log.Println(data.FileName)
+		log.Println(data.FileObjectID)
+		log.Println(data.Timestamp)
+	}
 	return nil
 }

@@ -1,15 +1,12 @@
 package consumer
 
 import (
-	nsqmq "go-nsq/application/mq/nsq"
+	"go-nsq/application/mq/rabbitmq"
 	"log"
 )
 
-type Handler struct {
-}
-
-func InitNSQSubscriber(
-	client nsqmq.INSQClient,
+func InitRabbitMQSubscriber(
+	client rabbitmq.IRabbitMQClient,
 ) {
 	err := client.Subscribe("TESTAGAIN")
 	if err != nil {

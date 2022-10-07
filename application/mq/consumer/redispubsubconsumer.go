@@ -8,11 +8,9 @@ import (
 func InitRedisPubSubSubscriber(
 	client redispubsub.IRedisClient,
 ) {
-	go func() {
-		err := client.Subscribe("sendPDF")
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}()
+	err := client.Subscribe("TESTAGAIN")
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
