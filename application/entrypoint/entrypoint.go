@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"go-nsq/application/mq"
 	nsqmq "go-nsq/application/mq/nsq"
+	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/store"
 	"go-nsq/store/minio"
@@ -20,12 +21,14 @@ func NewEntryPointService(
 	nsq nsqmq.INSQClient,
 	minio minio.MinioService,
 	redisPubSub redis.IRedisClient,
+	rabbitMQ rabbitmq.IRabbitMQClient,
 ) IEntryPointService {
 	return &EntryPointService{
 		DBStore:     store,
 		NSQ:         nsq,
 		Minio:       minio,
 		RedisPubSub: redisPubSub,
+		RabbitMQ:    rabbitMQ,
 	}
 }
 
@@ -62,6 +65,11 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	err = c.RedisPubSub.Publish("TESTAGAIN", res)
 	if err != nil {
 		log.Printf("Error sending message to RedisPubSub with error %v", err)
+		return err
+	}
+	err = c.RabbitMQ.Publish()
+	if err != nil {
+		log.Printf("Error sending message to RabbitMQ with error %v", err)
 		return err
 	}
 

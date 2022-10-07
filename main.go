@@ -5,6 +5,7 @@ import (
 	"go-nsq/application/entrypoint"
 	"go-nsq/application/mq/consumer"
 	nsqmq "go-nsq/application/mq/nsq"
+	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/db"
 	"go-nsq/store/minio"
@@ -52,7 +53,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error intialize Redis Client")
 	}
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient)
+	rabbitMQClient, err := rabbitmq.NewRabbitMQClient()
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient, rabbitMQClient)
 
 	consumer.InitNSQSubscriber(NSQClient)
 	consumer.InitRedisPubSubSubscriber(redisPubSubClient)
