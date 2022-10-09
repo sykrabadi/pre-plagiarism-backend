@@ -60,6 +60,7 @@ func (r RedisClient) Publish(Topic string, Message []byte) error {
 func (r RedisClient) Subscribe(Channel string) error {
 	subscriber := r.client.Subscribe(context.TODO(), Channel)
 
+	// TODO : Fix subscription mechanism using subscriber.Channel to subscribe message concurrently
 	msg, err := subscriber.ReceiveMessage(context.TODO())
 	if err != nil {
 		log.Printf("Error receive message with error %v", err)
