@@ -61,21 +61,19 @@ func (r RedisClient) Subscribe(Channel string) error {
 	subscriber := r.client.Subscribe(context.TODO(), Channel)
 
 	// TODO : Fix subscription mechanism using subscriber.Channel to subscribe message concurrently
-	msg, err := subscriber.ReceiveMessage(context.TODO())
-	if err != nil {
-		log.Printf("Error receive message with error %v", err)
-		return err
-	}
+	msgs := subscriber.Channel()
 	var resp mq.Message
-	err = json.Unmarshal([]byte(msg.Payload), &resp)
-	if err != nil {
-		log.Println("Fail to unmarshall json at Redis PubSub Subscription")
-		return err
+	for d := range msgs {
+		err := json.Unmarshal([]byte(d.Payload), &resp)
+		if err != nil {
+			log.Println("Fail to unmarshall json at Redis PubSub Subscription")
+			return err
+		}
+		log.Printf("Logging message from Redis PubSub with payload : \n")
+		log.Println(resp.FileName)
+		log.Println(resp.FileObjectID)
+		log.Println(resp.Timestamp)
 	}
-	log.Printf("Logging message from Redis PubSub with payload : \n")
-	log.Println(resp.FileName)
-	log.Println(resp.FileObjectID)
-	log.Println(resp.Timestamp)
 
 	return nil
 
