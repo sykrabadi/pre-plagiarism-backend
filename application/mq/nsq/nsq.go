@@ -7,6 +7,8 @@ import (
 	"time"
 
 	nsq "github.com/nsqio/go-nsq"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 type INSQClient interface {
@@ -24,12 +26,6 @@ type NSQMessageHandler struct{}
 
 // TODO : Apply message format from MQ to update the specified document at mongodb
 func processMessage(body []byte) error {
-	// var response Message
-	// err := json.Unmarshal(body, &response)
-	// if err != nil {
-	// 	log.Printf("Error unmarshall from NSQ json with error %v", err)
-	// 	return err
-	// }
 	log.Printf("Receiving message from NSQ with payload : %v ", string(body))
 	return nil
 }
@@ -60,14 +56,23 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 
 type NSQClient struct {
 	config nsq.Config
+	msgCounter prometheus.Counter
 }
 
 func NewNSQClient() INSQClient {
 	config := nsq.NewConfig()
 	// after adding config.DialTimeout, NSQ will not throw i/o timeout anymore
 	config.DialTimeout = 3 * time.Second
+	reg := prometheus.NewRegistry()
+	msgCounter := promauto.With(reg).NewCounter(prometheus.CounterOpts{
+		Name:      "message_emmited_count",
+		Help:      "Number of message pumped",
+	})
+	// Register msgCounter metric
+	prometheus.Register(msgCounter)
 	return &NSQClient{
 		config: *config,
+		msgCounter: msgCounter,
 	}
 }
 
@@ -77,21 +82,11 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 		return err
 	}
 
-	//  TODO : Current code unable to handle request emmited from load test software.
-	// This commented code will be fixed later
-	// msgCounter := prometheus.NewCounter(
-	// 	prometheus.CounterOpts{
-	// 		Name: "message_published_count",
-	// 		Help: "Number of messages pumped from message broker",
-	// 	},
-	// )
-	// msgCounter.Inc()
-	// prometheus.MustRegister(msgCounter)
 	err = publisher.Publish(topic, message)
 	if err != nil {
 		return err
 	}
-
+	n.msgCounter.Inc()
 	return nil
 }
 
