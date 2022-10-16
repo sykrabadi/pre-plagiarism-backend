@@ -77,11 +77,16 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 		return err
 	}
 
-	// payload, err := json.Marshal(message)
-	// if err != nil {
-	// 	log.Printf("Error marshalling json with error %v", err)
-	// 	return err
-	// }
+	//  TODO : Current code unable to handle request emmited from load test software.
+	// This commented code will be fixed later
+	// msgCounter := prometheus.NewCounter(
+	// 	prometheus.CounterOpts{
+	// 		Name: "message_published_count",
+	// 		Help: "Number of messages pumped from message broker",
+	// 	},
+	// )
+	// msgCounter.Inc()
+	// prometheus.MustRegister(msgCounter)
 	err = publisher.Publish(topic, message)
 	if err != nil {
 		return err

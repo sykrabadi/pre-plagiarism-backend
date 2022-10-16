@@ -53,6 +53,12 @@ services:
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
       - rabbitmq_go_net
+  prometheus:
+    image: prom/prometheus:v2.39.0
+    ports:
+      - 9090:9090
+    volumes:
+      - ./config:/etc/prometheus
   # Source : https://hub.docker.com/r/bitnami/kafka
   # zookeeper:
   #   image: 'bitnami/zookeeper:3.8-debian-11'

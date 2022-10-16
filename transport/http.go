@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type server struct {
@@ -22,6 +23,7 @@ func NewHTTPServer(
 		entryPointService: entryPointService,
 	}
 	router.HandleFunc("/sendDocument", server.SendDocument).Methods(http.MethodPost)
+	router.Handle("/metrics", promhttp.Handler())
 
 	return router
 }
