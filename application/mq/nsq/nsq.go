@@ -65,8 +65,8 @@ func NewNSQClient() INSQClient {
 	config.DialTimeout = 3 * time.Second
 	reg := prometheus.NewRegistry()
 	msgCounter := promauto.With(reg).NewCounter(prometheus.CounterOpts{
-		Name:      "message_emmited_count",
-		Help:      "Number of message pumped",
+		Name:      "NSQ_message_pumped_count",
+		Help:      "Number of message pumped by NSQ",
 	})
 	// Register msgCounter metric
 	prometheus.Register(msgCounter)

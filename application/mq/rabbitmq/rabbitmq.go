@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/streadway/amqp"
 )
 
@@ -22,6 +24,7 @@ func failOnError(err error, msg string) {
 
 type RabbitMQClient struct {
 	client *amqp.Connection
+	msgCounter prometheus.Counter
 }
 
 func NewRabbitMQClient() (IRabbitMQClient, error) {
@@ -32,9 +35,17 @@ func NewRabbitMQClient() (IRabbitMQClient, error) {
 		failOnError(err, "Failed to connect to RabbitMQ")
 		return nil, err
 	}
+	reg := prometheus.NewRegistry()
+	msgCounter := promauto.With(reg).NewCounter(prometheus.CounterOpts{
+		Name:      "RabbitMQ_message_pumped_count",
+		Help:      "Number of message pumped by NSQ",
+	})
+	// Register msgCounter metric
+	prometheus.Register(msgCounter)
 
 	return RabbitMQClient{
 		client: conn,
+		msgCounter: msgCounter,
 	}, nil
 }
 
@@ -76,6 +87,7 @@ func (m RabbitMQClient) Publish(topic string, message []byte) error {
 		return err
 	}
 	log.Printf(" [x] Congrats, sending message: %s", message)
+	m.msgCounter.Inc()
 	return nil
 }
 

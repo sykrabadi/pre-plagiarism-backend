@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 type Message struct {
@@ -23,6 +25,7 @@ type IRedisClient interface {
 
 type RedisClient struct {
 	client *redis.Client
+	msgCounter prometheus.Counter
 }
 
 func NewRedisClient() (IRedisClient, error) {
@@ -41,8 +44,17 @@ func NewRedisClient() (IRedisClient, error) {
 		return nil, err
 	}
 
+	reg := prometheus.NewRegistry()
+	msgCounter := promauto.With(reg).NewCounter(prometheus.CounterOpts{
+		Name:      "RedisPubSub_message_pumped_count",
+		Help:      "Number of message pumped by NSQ",
+	})
+	// Register msgCounter metric for redispubsub
+	prometheus.Register(msgCounter)
+
 	return RedisClient{
 		client: rdb,
+		msgCounter: msgCounter,
 	}, nil
 }
 
@@ -54,6 +66,7 @@ func (r RedisClient) Publish(Topic string, Message []byte) error {
 		return err
 	}
 
+	r.msgCounter.Inc()
 	return nil
 }
 

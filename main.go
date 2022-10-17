@@ -53,6 +53,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error intialize Redis Client")
 	}
+	
+	// monitoringMetric := monitoring.InitMonitoring()
 	rabbitMQClient, err := rabbitmq.NewRabbitMQClient()
 	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient, rabbitMQClient)
 
