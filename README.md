@@ -1,5 +1,11 @@
 # go-nsq
 
+## System Architecure
+![assets\system_architecture.jpg](assets/system_architecture.jpg/)
+This project use docker to pack every dependencies. However (currently) the Pre-Falsification Engine is unavailable, but you still able to run this software.
+
+The `Entry Point Service` act as gate to access the prefalsification engine. The contract of the `Entry Point Service` provided below. We store the document on MinIO object storage and results from `prefalsification engine` on MongoDB (since we don't see any urgencies to use relational databases). The document information flows from `Entry Point Service` to `prefalsification engine` via message brokers.
+
 ## How To Run
 1. Make sure you are already install `Go`. In this version, we use `v1.19.1` of `Go`.
 2. Clone this repo, to desired location, then run `go mod tidy`

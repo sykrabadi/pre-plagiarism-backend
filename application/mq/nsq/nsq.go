@@ -57,6 +57,7 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 type NSQClient struct {
 	config nsq.Config
 	msgCounter prometheus.Counter
+	msgCounterVec prometheus.CounterVec
 }
 
 func NewNSQClient() INSQClient {
@@ -68,11 +69,18 @@ func NewNSQClient() INSQClient {
 		Name:      "NSQ_message_pumped_count",
 		Help:      "Number of message pumped by NSQ",
 	})
+	regMsgCounterVec := prometheus.NewRegistry()
+	msgCounterVec := promauto.With(regMsgCounterVec).NewCounterVec(prometheus.CounterOpts{
+		Name: "NSQ_msg_pumped_vec_counter",
+		Help: "Number of message pumped by NSQ in vector",
+	}, []string{"code", "method"})
 	// Register msgCounter metric
 	prometheus.Register(msgCounter)
+	prometheus.Register(msgCounterVec)
 	return &NSQClient{
 		config: *config,
 		msgCounter: msgCounter,
+		msgCounterVec: *msgCounterVec,
 	}
 }
 
@@ -87,6 +95,8 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 		return err
 	}
 	n.msgCounter.Inc()
+	counterVec := n.msgCounterVec.WithLabelValues("200", "POST")
+	counterVec.Inc()
 	return nil
 }
 
