@@ -64,9 +64,6 @@ services:
     restart: always
     ports:
       - 27017:27017
-    # volumes :
-    #   - ./config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
-      # - ./mongodata:/data/db
     command: mongod
   # mongo_express:
   #       image: mongo-express:0.54.0

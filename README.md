@@ -1,10 +1,33 @@
 # go-nsq
 
 ## System Architecure
-![assets\system_architecture.jpg](assets/system_architecture.jpg/)
+![assets\system_architecture.jpg](assets/system_architecture.jpg)
 This project use docker to pack every dependencies. However (currently) the Pre-Falsification Engine is unavailable, but you still able to run this software.
 
 The `Entry Point Service` act as gate to access the prefalsification engine. The contract of the `Entry Point Service` provided below. We store the document on MinIO object storage and results from `prefalsification engine` on MongoDB (since we don't see any urgencies to use relational databases). The document information flows from `Entry Point Service` to `prefalsification engine` via message brokers.
+
+## API Contract
+This system use REST API to connect from frontend. The API contract is provided below
+
+### **sendDocument**
+| HTTP Method  | MIME type  |
+|---|---|
+| POST   | .pdf  |
+
+This screenshot from postman shows how to use the `/sendDocument` endpoint properly
+
+![assets\success_request.png](assets/success_request.png)
+
+## Before You Run
+Before you test this application, please supply these environment variables on your `.env` that you should locate on the root of this repo. Table below tells the key and the value of the environment variable
+| Key  | Value  |
+|---|---|
+| MONGODB_DB_NAME   | documents  |
+| MINIO_ENDPOINT   | localhost:9000  |
+| MINIO_ACCESS_KEY_ID   | Q3AM3UQ867SPQQA43P2F  |
+| MINIO_SECRET_ACCESS_KEY   | zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG  |
+| MINIO_BUCKET   | documents  |
+| RABBITMQ_URL_ADDRESS   | amqp://guest:guest@localhost:5672/  |
 
 ## How To Run
 1. Make sure you are already install `Go`. In this version, we use `v1.19.1` of `Go`.

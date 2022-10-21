@@ -16,40 +16,37 @@ type Mongo struct {
 	Db     *mongo.Database
 }
 
-func loadMongoDBConfig() (string, string, error) {
+// Commented code ode below is used to connect to mongodb atlas
+func loadMongoDBConfig() (string, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
-
-	if os.Getenv("MONGODB_USERNAME") == "" {
-		return "", "", fmt.Errorf("Environment Variable MONGODB_USERNAME must be set")
-	}
-	if os.Getenv("MONGODB_PASSWORD") == "" {
-		return "", "", fmt.Errorf("Environment Variable MONGODB_PASSWORD must be set")
-	}
-	if os.Getenv("MONGODB_CLUSTER") == "" {
-		return "", "", fmt.Errorf("Environment Variable MONGODB_CLUSTER must be set")
-	}
+	// if os.Getenv("MONGODB_USERNAME") == "" {
+	// 	return "", "", fmt.Errorf("Environment Variable MONGODB_USERNAME must be set")
+	// }
+	// if os.Getenv("MONGODB_PASSWORD") == "" {
+	// 	return "", "", fmt.Errorf("Environment Variable MONGODB_PASSWORD must be set")
+	// }
+	// if os.Getenv("MONGODB_CLUSTER") == "" {
+	// 	return "", "", fmt.Errorf("Environment Variable MONGODB_CLUSTER must be set")
+	// }
 	if os.Getenv("MONGODB_DB_NAME") == "" {
-		return "", "", fmt.Errorf("Environment Variable MONGODB_DB_NAME must be set")
+		return "", fmt.Errorf("Environment Variable MONGODB_DB_NAME must be set")
 	}
 
-	connStr := fmt.Sprintf("mongodb+srv://%s:%s@%s",
-		os.Getenv("MONGODB_USERNAME"),
-		os.Getenv("MONGODB_PASSWORD"),
-		os.Getenv("MONGODB_CLUSTER"),
-	)
+	// connStr := fmt.Sprintf("mongodb+srv://%s:%s@%s",
+	// 	os.Getenv("MONGODB_USERNAME"),
+	// 	os.Getenv("MONGODB_PASSWORD"),
+	// 	os.Getenv("MONGODB_CLUSTER"),
+	// )
 
 	dbName := fmt.Sprintf("%s", os.Getenv("MONGODB_DB_NAME"))
 
-	return connStr, dbName, nil
+	return dbName, nil
 }
 
 func InitMongoDB(ctx context.Context) (*Mongo, error) {
-	uri, db, err := loadMongoDBConfig()
-	if uri == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
-	}
+	db, err := loadMongoDBConfig()
 	if db == "" {
 		log.Fatal("You must set your 'MONGODB_DB_NAME' environmental variable.")
 	}
