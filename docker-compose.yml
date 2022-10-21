@@ -59,6 +59,23 @@ services:
       - 9090:9090
     volumes:
       - ./config:/etc/prometheus
+  mongodb:
+    image: mongo:6.0.2
+    restart: always
+    ports:
+      - 27017:27017
+    # volumes :
+    #   - ./config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+      # - ./mongodata:/data/db
+    command: mongod
+  # mongo_express:
+  #       image: mongo-express:0.54.0
+  #       container_name: mongo_express
+  #       depends_on:
+  #           - 'mongodb'
+  #       ports:
+  #           - '8081:8081'
+  #       restart: always
   # Source : https://hub.docker.com/r/bitnami/kafka
   # zookeeper:
   #   image: 'bitnami/zookeeper:3.8-debian-11'

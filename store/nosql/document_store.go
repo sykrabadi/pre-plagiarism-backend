@@ -14,13 +14,14 @@ type DocumentStoreService struct {
 }
 
 func (c *DocumentStoreService) SendData(documentName string) (string, error) {
-	documentCollection := c.conn.Db.Collection("docs")
+	documentCollection := c.conn.Db.Collection("documents")
 	res, err := documentCollection.InsertOne(context.Background(), bson.D{
 		{Key: "name", Value: documentName},
 	})
 	fileObjectID := fmt.Sprint(res.InsertedID)
 
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 	log.Printf("Success insert document with ObjectID %v \n", res.InsertedID)
