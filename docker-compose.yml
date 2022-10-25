@@ -43,16 +43,25 @@ services:
     volumes:
       - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
       - rabbitmq_go_net
+    command: ["rabbitmq-plugins enable rabbitmq_prometheus"]
+  rabbitmq-exporter:
+    # https://hub.docker.com/r/kbudde/rabbitmq-exporter/tags
+    image: kbudde/rabbitmq-exporter:v1.0.0-RC9
+    networks:
+      - rabbitmq_go_net
+    environment:
+      RABBIT_URL: "http://127.0.0.1:15672/"
   prometheus:
     image: prom/prometheus:v2.39.0
     ports:
@@ -61,10 +70,18 @@ services:
       - ./config:/etc/prometheus
   mongodb:
     image: mongo:6.0.2
-    restart: always
     ports:
       - 27017:27017
     command: mongod
+  # nsq_exporter:
+  #   container_name: nsq_exporter
+  #   image: lovoo/nsq_exporter
+  #   ports:
+  #     - 9117:9117
+  #   labels:
+  #     - nsqd:nsqd
+  #   depends_on: 
+  #     - nsqd
   # mongo_express:
   #       image: mongo-express:0.54.0
   #       container_name: mongo_express
@@ -95,4 +112,5 @@ services:
 
 networks:
   rabbitmq_go_net:
+  # remove driver if fails
     driver: bridge
