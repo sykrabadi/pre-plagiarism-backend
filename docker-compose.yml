@@ -20,18 +20,23 @@ services:
   nsqd:
     image: nsqio/nsq
     container_name: nsqd
-    command: /nsqd --broadcast-address=nsqd --lookupd-tcp-address=nsqlookupd:4160
+    command: /nsqd --broadcast-address=nsqd --statsd-address=graphite:8125 --data-path=/data --lookupd-tcp-address=nsqlookupd:4160 --statsd-interval=0m45s
+    volumes:
+      - /data
     depends_on:
       - nsqlookupd
+      - graphite
     ports:
       - "4150:4150"
       - "4151:4151"
   nsqadmin:
     image: nsqio/nsq
     container_name: nsqadmin
-    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161 --proxy-graphite=true --graphite-url=http://graphite --statsd-interval=0m45s  
     depends_on:
-      - nsqlookupd  
+      - nsqlookupd
+      - nsqd
+      - graphite
     ports:
       - "4171:4171"
   redis:
@@ -54,9 +59,8 @@ services:
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
       - rabbitmq_go_net
-    command: ["rabbitmq-plugins enable rabbitmq_prometheus"]
+    # command: ["rabbitmq-plugins", "enable", "rabbitmq_prometheus"]
   rabbitmq-exporter:
-    # https://hub.docker.com/r/kbudde/rabbitmq-exporter/tags
     image: kbudde/rabbitmq-exporter:v1.0.0-RC9
     networks:
       - rabbitmq_go_net
@@ -73,23 +77,28 @@ services:
     ports:
       - 27017:27017
     command: mongod
-  # nsq_exporter:
-  #   container_name: nsq_exporter
-  #   image: lovoo/nsq_exporter
-  #   ports:
-  #     - 9117:9117
-  #   labels:
-  #     - nsqd:nsqd
-  #   depends_on: 
-  #     - nsqd
-  # mongo_express:
-  #       image: mongo-express:0.54.0
-  #       container_name: mongo_express
-  #       depends_on:
-  #           - 'mongodb'
-  #       ports:
-  #           - '8081:8081'
-  #       restart: always
+  graphite:
+    image: graphiteapp/graphite-statsd:1.1.10-3
+    container_name: graphite
+    ports:
+      - 80:80
+      - 2003-2004:2003-2004
+      - 2023-2024:2023-2024
+      - 8125:8125/udp
+      - 8126:8126
+  # statsdaemon:
+  #   image: bitly/statsdaemon:v0.7.3
+  #   container_name: statsdaemon
+  nsq_exporter:
+    container_name: nsq_exporter
+    image: lovoo/nsq_exporter
+    ports:
+      - 9117:9117
+    labels:
+      - nsqd:nsqd
+    command:
+      - '-nsqd.addr=http://nsqd:4151/stats'
+      - '-collect=stats.topics,stats.channels'
   # Source : https://hub.docker.com/r/bitnami/kafka
   # zookeeper:
   #   image: 'bitnami/zookeeper:3.8-debian-11'

@@ -14,3 +14,7 @@ scrape_configs:
     static_configs:
       - targets:
         - "host.docker.internal:15692"
+  - job_name: nsq-exporter
+    static_configs:
+      - targets:
+        - "host.docker.internal:9117"
