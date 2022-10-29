@@ -20,7 +20,7 @@ services:
   nsqd:
     image: nsqio/nsq
     container_name: nsqd
-    command: /nsqd --broadcast-address=nsqd --statsd-address=graphite:8125 --data-path=/data --lookupd-tcp-address=nsqlookupd:4160 --statsd-interval=0m45s
+    command: /nsqd --broadcast-address=nsqd --statsd-address=graphite:8125 --data-path=/data --lookupd-tcp-address=nsqlookupd:4160
     volumes:
       - /data
     depends_on:
@@ -32,7 +32,8 @@ services:
   nsqadmin:
     image: nsqio/nsq
     container_name: nsqadmin
-    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161 --proxy-graphite=true --graphite-url=http://graphite --statsd-interval=0m45s  
+    # add --lookupd-http-address=nsqlookupd:4161 at command if necessary
+    command: /nsqadmin --proxy-graphite=true --graphite-url=http://graphite --nsqd-http-address=nsqd:4151 --statsd-counter-format="stats_counts.%s"
     depends_on:
       - nsqlookupd
       - nsqd
