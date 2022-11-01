@@ -19,6 +19,7 @@ This screenshot from postman shows how to use the `/sendDocument` endpoint prope
 ![assets\success_request.png](assets/success_request.png)
 
 ## Before You Run
+### Environment Variables
 Before you test this application, please supply these environment variables on your `.env` that you should locate on the root of this repo. Table below tells the key and the value of the environment variable
 | Key  | Value  |
 |---|---|
@@ -28,6 +29,27 @@ Before you test this application, please supply these environment variables on y
 | MINIO_SECRET_ACCESS_KEY   | zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG  |
 | MINIO_BUCKET   | documents  |
 | RABBITMQ_URL_ADDRESS   | amqp://guest:guest@localhost:5672/  |
+### NSQ
+1. If you encountered error `nsqadmin: UPSTREAM_ERROR: Failed to query any nsqd` on nsqadmin, change the value of `--broadcast-address` from current value to value as set on `container_name` on `docker-compose.yml` (ref: https://github.com/nsqio/nsq/issues/1040).
+2. Make sure to add `nsqd` as value to `127.0.0.1` in your `etc\host` file
+### Graphite Integration
+In case you want to unlock the graphite integration with NSQ on this project using the non legacy namespace (in this project, the version of graphite using legacy namespace by default), please follow these steps
+1. Go to CLI on `graphite` container, then move to `opt/graphite/conf`
+2. Update the `storage-aggregation.conf` and `storage-schemas.conf` file as mentioned here [https://nsq.io/components/nsqd.html#statsd--graphite-integration](https://nsq.io/components/nsqd.html#statsd--graphite-integration)
+3. Add the `graphite` key at `udp.js` that located at `opt/statsd/config`. The result would be like this
+```json
+{
+  "graphiteHost": "127.0.0.1",
+  "graphitePort": 2003,
+  "port": 8125,
+  "flushInterval": 10000,
+  "graphite":{"legacyNamespace": false},
+  "servers": [
+    { server: "./servers/udp", address: "0.0.0.0", port: 8125 }
+  ]
+}
+```
+4. Access the graphite browser. Now you'll see the `counter` folder beneath the `stats` folder
 
 ## How To Run
 1. Make sure you are already install `Go`. In this version, we use `v1.19.1` of `Go`.
@@ -37,8 +59,4 @@ Before you test this application, please supply these environment variables on y
 
 ## Note
 1. Make sure to the env variable to use `MINIO_ACCESS_KEY_ID` and `MINIO_SECRET_ACCESS_KEY` as username and password when you want to login to Minio console
-2. If you encountered error `nsqadmin: UPSTREAM_ERROR: Failed to query any nsqd` on nsqadmin, change the value of `--broadcast-address` from current value to value as set on `container_name` on `docker-compose.yml` (ref: https://github.com/nsqio/nsq/issues/1040).
-3. Make sure to add `nsqd` as value to `127.0.0.1` in your `etc\host` file
-4. To enable the graph at `nsqadmin`, please add these configs which located at `opt/graphite/conf` at `graphite` container by open the container CLI
-    -   `printf "\n[nsq]\npattern = ^nsq\..*\nretentions = 1m:1d,5m:30d,15m:1y\n" >> storage-schemas.conf`
-    -   `printf "\n[default_nsq]\npattern = ^nsq\..*\nxFilesFactor = 0.2\naggregationMethod = average\n" >> storage-aggregation.conf`
+

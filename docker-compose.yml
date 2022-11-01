@@ -33,7 +33,7 @@ services:
     image: nsqio/nsq
     container_name: nsqadmin
     # add --lookupd-http-address=nsqlookupd:4161 at command if necessary
-    command: /nsqadmin --proxy-graphite=true --graphite-url=http://graphite --nsqd-http-address=nsqd:4151 --statsd-counter-format="stats_counts.%s"
+    command: /nsqadmin --proxy-graphite=true --graphite-url=http://graphite --nsqd-http-address=nsqd:4151
     depends_on:
       - nsqlookupd
       - nsqd
