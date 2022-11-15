@@ -76,11 +76,8 @@ func (k KafkaClient) Subscribe(topic string) error{
 		return err
 	}
 
-	// TODO : improve line 80-106
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-
-	msgCount := 0
 
 	doneCh := make(chan struct{})
 	go func(){
@@ -89,20 +86,17 @@ func (k KafkaClient) Subscribe(topic string) error{
 			case err := <-subscriber.Errors():
 				log.Printf("Fail to Subscribe from Kafka with error:%v", err)
 			case msg := <-subscriber.Messages():
-				msgCount++
 				log.Printf("Consuming message from topic:%v | message: %v", string(msg.Topic), string(msg.Value))
 			case <-sigchan:
+				err = k.consumer.Close()
+				if err != nil {
+					log.Fatalf("Error shutting down Kafka consumer gracefully with error:%v", err)
+				}
 				log.Printf("Shutting down Kafka conumser \n")
 				doneCh <- struct{}{}
 			}
 		}
 	}()
 
-	<-doneCh
-
-	if err := k.consumer.Close(); err != nil{
-		log.Printf("Error when closing consumer channel with error: %v", err)
-		return err
-	}
 	return nil
 }
