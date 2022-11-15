@@ -29,6 +29,7 @@ Before you test this application, please supply these environment variables on y
 | MINIO_SECRET_ACCESS_KEY   | zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG  |
 | MINIO_BUCKET   | documents  |
 | RABBITMQ_URL_ADDRESS   | amqp://guest:guest@localhost:5672/  |
+| KAFKA_BROKER_ADDR   | localhost:9092  |
 ### NSQ
 1. If you encountered error `nsqadmin: UPSTREAM_ERROR: Failed to query any nsqd` on nsqadmin, change the value of `--broadcast-address` from current value to value as set on `container_name` on `docker-compose.yml` (ref: https://github.com/nsqio/nsq/issues/1040).
 2. Make sure to add `nsqd` as value to `127.0.0.1` in your `etc\host` file

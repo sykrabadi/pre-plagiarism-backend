@@ -58,6 +58,7 @@ type NSQClient struct {
 	config nsq.Config
 	msgCounter prometheus.Counter
 	msgCounterVec prometheus.CounterVec
+	mqLatency prometheus.Histogram
 }
 
 func NewNSQClient() INSQClient {
@@ -74,17 +75,43 @@ func NewNSQClient() INSQClient {
 		Name: "NSQ_msg_pumped_vec_counter",
 		Help: "Number of message pumped by NSQ in vector",
 	}, []string{"code", "method"})
+	histogramReg := prometheus.NewRegistry()
+	msgHistogram := promauto.With(histogramReg).NewHistogram(
+		prometheus.HistogramOpts{
+			Name: "NSQ_latency_seconds",
+			Help: "Latency of NSQ in seconds",
+			Buckets: prometheus.LinearBuckets(0.01, 0.05, 10),
+		},
+	)
 	// Register msgCounter metric
-	prometheus.Register(msgCounter)
-	prometheus.Register(msgCounterVec)
+	err := prometheus.Register(msgCounter)
+	if err != nil {
+		log.Printf("Fail to register NSQ message counter with error: %v", err)
+		return nil
+	}
+	err = prometheus.Register(msgCounterVec)
+	if err != nil {
+		log.Printf("Fail to register NSQ message countervec with error: %v", err)
+		return nil
+	}
+	err = prometheus.Register(msgHistogram)
+	if err != nil {
+		log.Printf("Fail to register NSQ message latency with error: %v", err)
+		return nil
+	}
 	return &NSQClient{
 		config: *config,
 		msgCounter: msgCounter,
 		msgCounterVec: *msgCounterVec,
+		mqLatency: msgHistogram,
 	}
 }
 
 func (n NSQClient) Publish(topic string, message []byte) error {
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64){
+		n.mqLatency.Observe(v)
+	}))
+	defer timer.ObserveDuration()
 	publisher, err := nsq.NewProducer("127.0.0.1:4150", &n.config)
 	if err != nil {
 		return err

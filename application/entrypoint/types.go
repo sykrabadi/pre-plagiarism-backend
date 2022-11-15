@@ -2,6 +2,7 @@ package entrypoint
 
 import (
 	"context"
+	"go-nsq/application/mq/kafka"
 	NSQ "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
@@ -16,6 +17,7 @@ type EntryPointService struct {
 	Minio       minio.MinioService
 	RedisPubSub redis.IRedisClient
 	RabbitMQ    rabbitmq.IRabbitMQClient
+	Kafka kafka.IKafkaClient
 }
 
 type IEntryPointService interface {

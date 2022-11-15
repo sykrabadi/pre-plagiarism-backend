@@ -25,6 +25,7 @@ func failOnError(err error, msg string) {
 type RabbitMQClient struct {
 	client *amqp.Connection
 	msgCounter prometheus.Counter
+	mqLatency prometheus.Histogram
 }
 
 func NewRabbitMQClient() (IRabbitMQClient, error) {
@@ -38,18 +39,42 @@ func NewRabbitMQClient() (IRabbitMQClient, error) {
 	reg := prometheus.NewRegistry()
 	msgCounter := promauto.With(reg).NewCounter(prometheus.CounterOpts{
 		Name:      "RabbitMQ_message_pumped_count",
-		Help:      "Number of message pumped by NSQ",
+		Help:      "Number of message pumped by RabbitMQ",
 	})
+
+	histogramReg := prometheus.NewRegistry()
+	msgHistogram := promauto.With(histogramReg).NewHistogram(
+		prometheus.HistogramOpts{
+			Name: "RabbitMQ_latency_seconds",
+			Help: "Latency of RabbitMQ in seconds",
+			Buckets: prometheus.LinearBuckets(0.01, 0.05, 10),
+		},
+	)
 	// Register msgCounter metric
-	prometheus.Register(msgCounter)
+	err = prometheus.Register(msgCounter)
+	if err != nil {
+		log.Printf("Fail to register RabbitMQ message counter with error: %v", err)
+		return nil, err
+	}
+	err = prometheus.Register(msgHistogram)
+	if err != nil {
+		log.Printf("Fail to register RabbitMQ message latency with error: %v", err)
+		return nil, err
+	}
 
 	return RabbitMQClient{
 		client: conn,
 		msgCounter: msgCounter,
+		mqLatency: msgHistogram,
 	}, nil
 }
 
 func (m RabbitMQClient) Publish(topic string, message []byte) error {
+	//var status string
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64){
+		m.mqLatency.Observe(v)
+	}))
+	defer timer.ObserveDuration()
 	ch, err := m.client.Channel()
 	if err != nil {
 		failOnError(err, "Failed to open a channel")

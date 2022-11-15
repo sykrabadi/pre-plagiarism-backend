@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"go-nsq/application/mq"
+	"go-nsq/application/mq/kafka"
 	nsqmq "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
@@ -22,6 +23,7 @@ func NewEntryPointService(
 	minio minio.MinioService,
 	redisPubSub redis.IRedisClient,
 	rabbitMQ rabbitmq.IRabbitMQClient,
+	kafka kafka.IKafkaClient,
 ) IEntryPointService {
 	return &EntryPointService{
 		DBStore:     store,
@@ -29,6 +31,7 @@ func NewEntryPointService(
 		Minio:       minio,
 		RedisPubSub: redisPubSub,
 		RabbitMQ:    rabbitMQ,
+		Kafka: kafka,
 	}
 }
 
@@ -72,7 +75,11 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 		log.Printf("Error sending message to RabbitMQ with error %v", err)
 		return err
 	}
-
+	err = c.Kafka.Publish("TESTAGAIN", res)
+	if err != nil {
+		log.Printf("Error sending message to Kafka with error %v", err)
+		return err
+	}
 	return nil
 }
 

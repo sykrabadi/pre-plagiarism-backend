@@ -4,6 +4,7 @@ import (
 	"context"
 	"go-nsq/application/entrypoint"
 	"go-nsq/application/mq/consumer"
+	"go-nsq/application/mq/kafka"
 	nsqmq "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
@@ -56,7 +57,14 @@ func main() {
 	
 	// monitoringMetric := monitoring.InitMonitoring()
 	rabbitMQClient, err := rabbitmq.NewRabbitMQClient()
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient, rabbitMQClient)
+	if err != nil {
+		log.Fatalf("Error intialize RabbitMQ Client with error : %v", err)
+	}
+	kafkaClient, err := kafka.NewKafkaClient()
+	if err != nil {
+		log.Fatalf("Error intialize Kafka Client with error : %v", err)
+	}
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient, rabbitMQClient, kafkaClient)
 
 	go func() {
 
@@ -69,6 +77,8 @@ func main() {
 		":8080",
 		entryPointService,
 	)
+	
+	consumer.InitKafkaSubscriber(kafkaClient)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
