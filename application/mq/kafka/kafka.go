@@ -20,6 +20,7 @@ type KafkaClient struct {
 	client sarama.SyncProducer
 	consumer sarama.Consumer
 	msgCounter prometheus.Counter
+	mqLatency prometheus.Histogram
 }
 
 func NewKafkaClient() (IKafkaClient, error){
@@ -46,16 +47,30 @@ func NewKafkaClient() (IKafkaClient, error){
 		Name:      "Kafka_message_pumped_count",
 		Help:      "Number of message pumped by Kafka",
 	})
+	histogramReg := prometheus.NewRegistry()
+	msgHistogram := promauto.With(histogramReg).NewHistogram(
+		prometheus.HistogramOpts{
+			Name: "Kafka_latency_seconds",
+			Help: "Latency of Kafka in seconds",
+			Buckets: prometheus.LinearBuckets(0.01, 0.05, 10),
+		},
+	)
 	// Register msgCounter metric
 	prometheus.Register(msgCounter)
+	prometheus.Register(msgHistogram)
 	return KafkaClient{
 		client: conn,
 		consumer: consumer,
 		msgCounter: msgCounter,
+		mqLatency: msgHistogram,
 	}, nil
 }
 
 func (k KafkaClient) Publish(topic string, message []byte) error{
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64){
+		k.mqLatency.Observe(v)
+	}))
+	defer timer.ObserveDuration()
 	msg := sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.StringEncoder(message),

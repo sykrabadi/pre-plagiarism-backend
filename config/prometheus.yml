@@ -9,7 +9,7 @@ scrape_configs:
   - job_name: message_queue
     static_configs:
       - targets: 
-        - "host.docker.internal:8080"
+        - "host.docker.internal:8000"
   - job_name: rabbitmq-exporter
     static_configs:
       - targets:
@@ -18,3 +18,7 @@ scrape_configs:
     static_configs:
       - targets:
         - "host.docker.internal:9117"
+  - job_name: cadvisor
+    static_configs:
+      - targets:
+        - cadvisor:8080

@@ -74,7 +74,7 @@ func main() {
 	}()
 
 	go serveHTTP(
-		":8080",
+		":8000",
 		entryPointService,
 	)
 	

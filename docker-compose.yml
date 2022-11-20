@@ -67,12 +67,6 @@ services:
       - rabbitmq_go_net
     environment:
       RABBIT_URL: "http://127.0.0.1:15672/"
-  prometheus:
-    image: prom/prometheus:v2.39.0
-    ports:
-      - 9090:9090
-    volumes:
-      - ./config:/etc/prometheus
   mongodb:
     image: mongo:6.0.2
     ports:
@@ -87,9 +81,6 @@ services:
       - 2023-2024:2023-2024
       - 8125:8125/udp
       - 8126:8126
-  # statsdaemon:
-  #   image: bitly/statsdaemon:v0.7.3
-  #   container_name: statsdaemon
   nsq_exporter:
     container_name: nsq_exporter
     image: lovoo/nsq_exporter
@@ -119,6 +110,28 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+      - kafka
+      - rabbitmq
+      - nsqd
+  prometheus:
+    image: prom/prometheus:v2.39.0
+    ports:
+      - 9090:9090
+    volumes:
+      - ./config:/etc/prometheus
+    depends_on:
+      - cadvisor
 
 networks:
   rabbitmq_go_net:
