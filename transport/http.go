@@ -18,6 +18,7 @@ type server struct {
 }
 
 var reg = prometheus.NewRegistry()
+var sendDocumentCounterReg = prometheus.NewRegistry()
 var sendDocumentLatency = promauto.With(reg).NewHistogramVec(
 	prometheus.HistogramOpts{
 		Name: "http_request_sendDocument_latency",
@@ -26,6 +27,10 @@ var sendDocumentLatency = promauto.With(reg).NewHistogramVec(
 	},
 	[]string{"status"},
 )
+var sendDocumentCounter = promauto.With(sendDocumentCounterReg).NewCounter(prometheus.CounterOpts{
+	Name: "sendDocument_client_message_pumped_count",
+	Help: "Number of message pumped from client",
+})
 
 func NewHTTPServer(
 	router *mux.Router,
@@ -72,6 +77,7 @@ func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
 			Message: "Error Sending Data",
 		})
 	}
+	sendDocumentCounter.Inc()
 	log.Println("Upload Document Success")
 	httpWriteResponse(w, &model.ServerResponse{
 		Message: "Success",

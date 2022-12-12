@@ -1,6 +1,7 @@
 package entrypoint
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"go-nsq/application/mq"
@@ -12,10 +13,26 @@ import (
 	"go-nsq/store/minio"
 	"log"
 	"mime/multipart"
+	"net/http"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// SendToRest simulates data transfer using REST API
+func SendToRest(data []byte) error{
+	payload := bytes.NewBuffer(data)
+	
+	baseURL := "http://localhost:8082"
+	
+	resp, err := http.Post(baseURL+"/sendData", "application/json", payload)
+	
+	if err != nil {
+		log.Fatalf("error sending data with error : %v", err)
+	}
+	defer resp.Body.Close()
+	return nil
+}
 
 func NewEntryPointService(
 	store store.Store,
@@ -75,9 +92,14 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	// 	log.Printf("Error sending message to RabbitMQ with error %v", err)
 	// 	return err
 	// }
-	err = c.Kafka.Publish("TESTAGAIN", res)
+	// err = c.Kafka.Publish("TESTAGAIN", res)
+	// if err != nil {
+	// 	log.Printf("Error sending message to Kafka with error %v", err)
+	// 	return err
+	// }
+	err = SendToRest(res)
 	if err != nil {
-		log.Printf("Error sending message to Kafka with error %v", err)
+		log.Printf("Error sending message to REST server with error %v", err)
 		return err
 	}
 	return nil
