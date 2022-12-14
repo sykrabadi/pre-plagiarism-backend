@@ -9,6 +9,7 @@ import (
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/db"
+	"go-nsq/externalapi/preplagiarism"
 	"go-nsq/store/minio"
 	"go-nsq/store/nosql"
 	"go-nsq/transport"
@@ -18,6 +19,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gorilla/mux"
 )
 
@@ -64,7 +66,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error intialize Kafka Client with error : %v", err)
 	}
-	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient, rabbitMQClient, kafkaClient)
+
+	restyRestClient := resty.New()
+	preplagiarismClient := preplagiarism.NewPrePlagiarismClient("http://localhost:8082", restyRestClient)
+	if err != nil {
+		log.Fatalf("error inizitialize REST Client with error : %v", err)
+	}
+	entryPointService := entrypoint.NewEntryPointService(mongoDBStore, NSQClient, minio, redisPubSubClient, rabbitMQClient, kafkaClient, preplagiarismClient)
 
 	go func() {
 

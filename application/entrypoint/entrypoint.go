@@ -9,6 +9,7 @@ import (
 	nsqmq "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
+	"go-nsq/externalapi/preplagiarism"
 	"go-nsq/store"
 	"go-nsq/store/minio"
 	"log"
@@ -41,6 +42,7 @@ func NewEntryPointService(
 	redisPubSub redis.IRedisClient,
 	rabbitMQ rabbitmq.IRabbitMQClient,
 	kafka kafka.IKafkaClient,
+	preplagiarismClient preplagiarism.IPrePlagiarism,
 ) IEntryPointService {
 	return &EntryPointService{
 		DBStore:     store,
@@ -49,6 +51,7 @@ func NewEntryPointService(
 		RedisPubSub: redisPubSub,
 		RabbitMQ:    rabbitMQ,
 		Kafka: kafka,
+		PrePlagiarismClient: preplagiarismClient,
 	}
 }
 
@@ -76,11 +79,11 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 		log.Println("Error marshalling to json payload at EntryPointService-SendData")
 		return err
 	}
-	// err = c.NSQ.Publish("TESTAGAIN", res)
-	// if err != nil {
-	// 	log.Printf("Error sending message to NSQ with error %v", err)
-	// 	return err
-	// }
+	err = c.NSQ.Publish("TESTAGAIN", res)
+	if err != nil {
+		log.Printf("Error sending message to NSQ with error %v", err)
+		return err
+	}
 	// Code below successfully
 	// err = c.RedisPubSub.Publish("TESTAGAIN", res)
 	// if err != nil {
@@ -97,11 +100,15 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	// 	log.Printf("Error sending message to Kafka with error %v", err)
 	// 	return err
 	// }
-	err = SendToRest(res)
-	if err != nil {
-		log.Printf("Error sending message to REST server with error %v", err)
-		return err
-	}
+	// err = SendToRest(res)
+	// if err != nil {
+	// 	log.Printf("Error sending message to REST server with error %v", err)
+	// 	return err
+	// }
+	// err = c.PrePlagiarismClient.SendToRest(res)
+	// if err != nil {
+	// 	log.Fatalf("error at EntryPoint with error %v \n", err)
+	// }
 	return nil
 }
 

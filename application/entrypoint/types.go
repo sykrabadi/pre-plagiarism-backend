@@ -6,6 +6,7 @@ import (
 	NSQ "go-nsq/application/mq/nsq"
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
+	"go-nsq/externalapi/preplagiarism"
 	"go-nsq/store"
 	"go-nsq/store/minio"
 	"mime/multipart"
@@ -18,6 +19,7 @@ type EntryPointService struct {
 	RedisPubSub redis.IRedisClient
 	RabbitMQ    rabbitmq.IRabbitMQClient
 	Kafka kafka.IKafkaClient
+	PrePlagiarismClient preplagiarism.IPrePlagiarism
 }
 
 type IEntryPointService interface {

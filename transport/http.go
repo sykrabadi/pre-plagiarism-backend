@@ -37,6 +37,7 @@ func NewHTTPServer(
 	entryPointService entrypoint.IEntryPointService,
 ) http.Handler {
 	prometheus.Register(sendDocumentLatency)
+	prometheus.Register(sendDocumentCounter)
 	server := server{
 		entryPointService: entryPointService,
 	}
