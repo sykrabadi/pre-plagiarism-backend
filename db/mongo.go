@@ -54,7 +54,7 @@ func InitMongoDB(ctx context.Context) (*Mongo, error) {
 		log.Fatalf("An error encountered with error message %s", err)
 	}
 
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://mongodb:27017"))
 	if err != nil {
 		return nil, fmt.Errorf("An error encountered : %s", err)
 	}
