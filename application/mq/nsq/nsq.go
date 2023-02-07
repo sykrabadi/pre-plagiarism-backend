@@ -1,8 +1,10 @@
 package nsq
 
 import (
+	"context"
 	"encoding/json"
 	"go-nsq/application/mq"
+	"go-nsq/store"
 	"log"
 	"time"
 
@@ -22,7 +24,9 @@ type Message struct {
 	FileName     string
 }
 
-type NSQMessageHandler struct{}
+type NSQMessageHandler struct{
+	dbstore store.Store
+}
 
 // TODO : Apply message format from MQ to update the specified document at mongodb
 func processMessage(body []byte) error {
@@ -37,6 +41,7 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
+	h.dbstore.DocumentStore().UpdateData(context.TODO(), "test")
 	var response mq.Message
 	// do whatever actual message processing is desired
 	err := json.Unmarshal(m.Body, &response)
@@ -59,9 +64,10 @@ type NSQClient struct {
 	msgCounter prometheus.Counter
 	msgCounterVec prometheus.CounterVec
 	mqLatency prometheus.Histogram
+	dbstore store.Store
 }
 
-func NewNSQClient() INSQClient {
+func NewNSQClient(store store.Store) INSQClient {
 	config := nsq.NewConfig()
 	// after adding config.DialTimeout, NSQ will not throw i/o timeout anymore
 	config.DialTimeout = 3 * time.Second
@@ -104,6 +110,7 @@ func NewNSQClient() INSQClient {
 		msgCounter: msgCounter,
 		msgCounterVec: *msgCounterVec,
 		mqLatency: msgHistogram,
+		dbstore: store,
 	}
 }
 
@@ -132,7 +139,7 @@ func (n NSQClient) Subscribe(topic string) error {
 	if err != nil {
 		return err
 	}
-	nsqSubscriber.AddHandler(&NSQMessageHandler{})
+	nsqSubscriber.AddHandler(&NSQMessageHandler{n.dbstore})
 
 	// either localhost or 127.0.0.1 as address are acceptable, but prefere 127.0.0.1 for consistency
 	nsqSubscriber.ConnectToNSQLookupd("127.0.0.1:4161")

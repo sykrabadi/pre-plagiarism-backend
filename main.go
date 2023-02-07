@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"go-nsq/application/entrypoint"
 	"go-nsq/application/mq/consumer"
 	"go-nsq/application/mq/kafka"
@@ -21,17 +22,23 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 // TODO : Seperate current function calls to concurrent
 
 func serveHTTP(
-	serverAddr string,
 	entrypointService entrypoint.IEntryPointService,
 ) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Printf("[serveHTTP] unable to load .env file with error %v \n", err)
+		return
+	}
+	serverAddr := os.Getenv("SERVER_ADDR")
 	router := mux.NewRouter()
 	serve := transport.NewHTTPServer(router, entrypointService)
-	err := http.ListenAndServe(serverAddr, serve)
+	err = http.ListenAndServe(fmt.Sprintf(":%v", serverAddr), serve)
 	if err != nil {
 		log.Fatalf("Error connecting to %v", serverAddr)
 	}
@@ -47,7 +54,7 @@ func main() {
 
 	mongoDBStore := nosql.NewNoSQLStore(client)
 
-	NSQClient := nsqmq.NewNSQClient()
+	NSQClient := nsqmq.NewNSQClient(mongoDBStore)
 	minio, err := minio.InitMinioService(ctx, "documents")
 	if err != nil {
 		log.Fatalf("Error intialize Minio Client")
@@ -82,7 +89,6 @@ func main() {
 	}()
 
 	go serveHTTP(
-		":8000",
 		entryPointService,
 	)
 	
