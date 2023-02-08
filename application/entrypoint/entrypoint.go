@@ -68,7 +68,7 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
-	message := mq.Message{
+	message := mq.MQPublishMessage{
 		Timestamp:    time.Now().String(),
 		FileName:     fileName,
 		FileObjectID: fileObjectID,

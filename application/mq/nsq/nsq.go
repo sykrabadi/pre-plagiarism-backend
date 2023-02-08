@@ -41,8 +41,7 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
-	h.dbstore.DocumentStore().UpdateData(context.TODO(), "test")
-	var response mq.Message
+	var response mq.MQSubscribeMessage
 	// do whatever actual message processing is desired
 	err := json.Unmarshal(m.Body, &response)
 	if err != nil {
@@ -50,10 +49,14 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 		return err
 	}
 
+	err = h.dbstore.DocumentStore().UpdateData(context.TODO(), response.FileObjectID)
+	if err != nil{
+		log.Printf("[NSQMessageHandler.HandleMessage] error when update data with error %v \n", err)
+		return err
+	}
+
 	log.Println("Logging message from NSQMessageHandler")
-	log.Println(response.FileName)
 	log.Println(response.FileObjectID)
-	log.Println(response.Timestamp)
 
 	// Returning a non-nil error will automatically send a REQ command to NSQ to re-queue the message.
 	return nil

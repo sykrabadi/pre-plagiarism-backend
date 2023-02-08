@@ -75,7 +75,7 @@ func (r RedisClient) Subscribe(Channel string) error {
 
 	// TODO : Fix subscription mechanism using subscriber.Channel to subscribe message concurrently
 	msgs := subscriber.Channel()
-	var resp mq.Message
+	var resp mq.MQSubscribeMessage
 	for d := range msgs {
 		err := json.Unmarshal([]byte(d.Payload), &resp)
 		if err != nil {

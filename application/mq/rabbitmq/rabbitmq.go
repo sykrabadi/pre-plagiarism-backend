@@ -149,7 +149,7 @@ func (m RabbitMQClient) Subscribe(topic string) error {
 		return err
 	}
 
-	var data mq.Message
+	var data mq.MQSubscribeMessage
 	for d := range response {
 		err := json.Unmarshal(d.Body, &data)
 		if err != nil {
