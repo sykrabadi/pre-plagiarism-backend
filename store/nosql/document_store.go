@@ -20,7 +20,6 @@ func (c *DocumentStoreService) SendData(documentName string) (interface{}, error
 	res, err := documentCollection.InsertOne(context.Background(), bson.D{
 		{Key: "name", Value: documentName},
 	})
-	//fileObjectID := fmt.Sprint(res.InsertedID)
 
 	if err != nil {
 		log.Println(err)
@@ -32,33 +31,34 @@ func (c *DocumentStoreService) SendData(documentName string) (interface{}, error
 
 func (c *DocumentStoreService) UpdateData(ctx context.Context, payload mq.MQSubscribeMessage) error {
 	coll := c.conn.Db.Collection("documents")
-	// TODO : Make contract to ensure the document schema
 	id, err := primitive.ObjectIDFromHex(fmt.Sprint(payload.FileObjectID))
 	if err != nil {
 		log.Printf("[DocumentStoreService.UpdateData] error creating objectId with error % \n", err)
 	}
+
 	filter := bson.D{
 		{"_id", id},
 	}
+
+	boundingBoxes := bson.A{}
+	for idx, val := range payload.BoundingBoxes{
+		log.Printf("[%v]:%v \n", idx, val)
+		bb := bson.D{
+			{"rect", bson.D{
+				{"x1", val.X1},
+				{"x2", val.X2},
+				{"y1", val.Y1},
+				{"y2", val.Y2},
+			},
+		},
+		}
+		boundingBoxes = append(boundingBoxes, bb)
+	}
+
 	update := bson.D{
 		{"$set", bson.D{
 			{Key: "bounding_boxes", Value: bson.A{
-				bson.D{
-					{"rect", bson.D{
-						{"x1", 123},
-						{"x2", 123},
-						{"y1", 123},
-						{"y2", 123},
-					}},
-				},
-				bson.D{
-					{"rect", bson.D{
-						{"x1", 123},
-						{"x2", 123},
-						{"y1", 123},
-						{"y2", 123},
-					}},
-				},
+				boundingBoxes,
 			},
 			},
 		},
@@ -69,6 +69,7 @@ func (c *DocumentStoreService) UpdateData(ctx context.Context, payload mq.MQSubs
 		filter,
 		update,
 	)
+
 	if err != nil {
 		log.Printf("[DocumentStoreService.UpdateData] unable to update data with object ID %v with error %v \n", payload.FileObjectID, err)
 		return err

@@ -42,6 +42,7 @@ func NewHTTPServer(
 		entryPointService: entryPointService,
 	}
 	router.HandleFunc("/sendDocument", server.SendDocument).Methods(http.MethodPost)
+	router.HandleFunc("/showDocument", server.ShowDocument).Methods(http.MethodGet)
 	router.Handle("/metrics", promhttp.Handler())
 
 	return router
@@ -83,4 +84,8 @@ func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
 	httpWriteResponse(w, &model.ServerResponse{
 		Message: "Success",
 	})
+}
+
+func (s *server) ShowDocument(w http.ResponseWriter, r *http.Request){
+
 }

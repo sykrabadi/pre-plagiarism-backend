@@ -82,12 +82,6 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 		log.Printf("Error sending message to NSQ with error %v", err)
 		return err
 	}
-	// Code below successfully
-	// err = c.RedisPubSub.Publish("TESTAGAIN", res)
-	// if err != nil {
-	// 	log.Printf("Error sending message to RedisPubSub with error %v", err)
-	// 	return err
-	// }
 	// err = c.RabbitMQ.Publish("TESTAGAIN", res)
 	// if err != nil {
 	// 	log.Printf("Error sending message to RabbitMQ with error %v", err)
