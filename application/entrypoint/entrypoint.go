@@ -16,18 +16,16 @@ import (
 	"mime/multipart"
 	"net/http"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SendToRest simulates data transfer using REST API
-func SendToRest(data []byte) error{
+func SendToRest(data []byte) error {
 	payload := bytes.NewBuffer(data)
-	
+
 	baseURL := "http://localhost:8082"
-	
+
 	resp, err := http.Post(baseURL+"/sendData", "application/json", payload)
-	
+
 	if err != nil {
 		log.Fatalf("error sending data with error : %v", err)
 	}
@@ -45,12 +43,12 @@ func NewEntryPointService(
 	preplagiarismClient preplagiarism.IPrePlagiarism,
 ) IEntryPointService {
 	return &EntryPointService{
-		DBStore:     store,
-		NSQ:         nsq,
-		Minio:       minio,
-		RedisPubSub: redisPubSub,
-		RabbitMQ:    rabbitMQ,
-		Kafka: kafka,
+		DBStore:             store,
+		NSQ:                 nsq,
+		Minio:               minio,
+		RedisPubSub:         redisPubSub,
+		RabbitMQ:            rabbitMQ,
+		Kafka:               kafka,
 		PrePlagiarismClient: preplagiarismClient,
 	}
 }
@@ -113,11 +111,11 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 }
 
 func (c *EntryPointService) UpdateData(ctx context.Context, objectID string) error {
-	fromHexID, _ := primitive.ObjectIDFromHex(objectID)
-	id := primitive.ObjectID.String(fromHexID)
-	err := c.DBStore.DocumentStore().UpdateData(ctx, id)
-	if err != nil {
-		return err
-	}
+	// fromHexID, _ := primitive.ObjectIDFromHex(objectID)
+	// id := primitive.ObjectID.String(fromHexID)
+	// err := c.DBStore.DocumentStore().UpdateData(ctx, id)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }

@@ -3,12 +3,14 @@ package nosql
 import (
 	"context"
 	"fmt"
+	"go-nsq/application/mq"
 	"go-nsq/db"
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 type DocumentStoreService struct {
 	conn *db.Mongo
 }
@@ -28,11 +30,11 @@ func (c *DocumentStoreService) SendData(documentName string) (interface{}, error
 	return res.InsertedID, nil
 }
 
-func (c *DocumentStoreService) UpdateData(ctx context.Context, objectID interface{}) error {
+func (c *DocumentStoreService) UpdateData(ctx context.Context, payload mq.MQSubscribeMessage) error {
 	coll := c.conn.Db.Collection("documents")
 	// TODO : Make contract to ensure the document schema
-	id, err := primitive.ObjectIDFromHex(fmt.Sprint(objectID))
-	if err != nil{
+	id, err := primitive.ObjectIDFromHex(fmt.Sprint(payload.FileObjectID))
+	if err != nil {
 		log.Printf("[DocumentStoreService.UpdateData] error creating objectId with error % \n", err)
 	}
 	filter := bson.D{
@@ -40,49 +42,36 @@ func (c *DocumentStoreService) UpdateData(ctx context.Context, objectID interfac
 	}
 	update := bson.D{
 		{"$set", bson.D{
-			{"items", bson.A{
-				"rect", bson.A{
-					bson.D{
+			{Key: "bounding_boxes", Value: bson.A{
+				bson.D{
+					{"rect", bson.D{
 						{"x1", 123},
-					},
-					bson.D{
-						{"y1", 321},
-					},
-					bson.D{
-						{"x2", 1234},
-					},
-					bson.D{
-						{"y2", 12345},
-					},
+						{"x2", 123},
+						{"y1", 123},
+						{"y2", 123},
+					}},
 				},
+				bson.D{
+					{"rect", bson.D{
+						{"x1", 123},
+						{"x2", 123},
+						{"y1", 123},
+						{"y2", 123},
+					}},
+				},
+			},
 			},
 		},
 		},
-	},
 	}
 
 	_, err = coll.UpdateOne(ctx,
 		filter,
 		update,
 	)
-	if err != nil{
-		log.Printf("[DocumentStoreService.UpdateData] unable to update data with object ID %v with error %v \n", objectID, err)
+	if err != nil {
+		log.Printf("[DocumentStoreService.UpdateData] unable to update data with object ID %v with error %v \n", payload.FileObjectID, err)
 		return err
 	}
-
-	// var result bson.M
-	// findOptions := options.Find()
-	// findOptions.SetSort(bson.D{{"_id", -1}})
-	// findOptions.SetLimit(1)
-	// cursor, err := documentCollection.Find(context.Background(), bson.D{}, findOptions)
-	// if err != nil {
-	// 	return err
-	// }
-	// cursor.Decode(&result)
-	// output, err := json.MarshalIndent(result, "", "    ")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// log.Println(output)
 	return nil
 }

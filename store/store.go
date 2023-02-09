@@ -1,6 +1,9 @@
 package store
 
-import "context"
+import (
+	"context"
+	"go-nsq/application/mq"
+)
 
 // store.go only contains interfaces
 
@@ -10,5 +13,5 @@ type Store interface {
 
 type DocumentStore interface {
 	SendData(string) (interface{}, error)
-	UpdateData(context.Context, interface{}) error
+	UpdateData(context.Context, mq.MQSubscribeMessage) error
 }

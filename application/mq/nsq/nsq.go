@@ -24,7 +24,7 @@ type Message struct {
 	FileName     string
 }
 
-type NSQMessageHandler struct{
+type NSQMessageHandler struct {
 	dbstore store.Store
 }
 
@@ -48,9 +48,10 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 		log.Printf("Error when unmarshalling json at NSQMessagehandler with error : %v", err)
 		return err
 	}
+	log.Printf("logging from test mq %v \n", response.BoundingBoxes)
 
-	err = h.dbstore.DocumentStore().UpdateData(context.TODO(), response.FileObjectID)
-	if err != nil{
+	err = h.dbstore.DocumentStore().UpdateData(context.TODO(), response)
+	if err != nil {
 		log.Printf("[NSQMessageHandler.HandleMessage] error when update data with error %v \n", err)
 		return err
 	}
@@ -63,11 +64,11 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 }
 
 type NSQClient struct {
-	config nsq.Config
-	msgCounter prometheus.Counter
+	config        nsq.Config
+	msgCounter    prometheus.Counter
 	msgCounterVec prometheus.CounterVec
-	mqLatency prometheus.Histogram
-	dbstore store.Store
+	mqLatency     prometheus.Histogram
+	dbstore       store.Store
 }
 
 func NewNSQClient(store store.Store) INSQClient {
@@ -76,8 +77,8 @@ func NewNSQClient(store store.Store) INSQClient {
 	config.DialTimeout = 3 * time.Second
 	reg := prometheus.NewRegistry()
 	msgCounter := promauto.With(reg).NewCounter(prometheus.CounterOpts{
-		Name:      "NSQ_message_pumped_count",
-		Help:      "Number of message pumped by NSQ",
+		Name: "NSQ_message_pumped_count",
+		Help: "Number of message pumped by NSQ",
 	})
 	regMsgCounterVec := prometheus.NewRegistry()
 	msgCounterVec := promauto.With(regMsgCounterVec).NewCounterVec(prometheus.CounterOpts{
@@ -87,8 +88,8 @@ func NewNSQClient(store store.Store) INSQClient {
 	histogramReg := prometheus.NewRegistry()
 	msgHistogram := promauto.With(histogramReg).NewHistogram(
 		prometheus.HistogramOpts{
-			Name: "NSQ_latency_seconds",
-			Help: "Latency of NSQ in seconds",
+			Name:    "NSQ_latency_seconds",
+			Help:    "Latency of NSQ in seconds",
 			Buckets: prometheus.LinearBuckets(0.01, 0.05, 10),
 		},
 	)
@@ -109,16 +110,16 @@ func NewNSQClient(store store.Store) INSQClient {
 		return nil
 	}
 	return &NSQClient{
-		config: *config,
-		msgCounter: msgCounter,
+		config:        *config,
+		msgCounter:    msgCounter,
 		msgCounterVec: *msgCounterVec,
-		mqLatency: msgHistogram,
-		dbstore: store,
+		mqLatency:     msgHistogram,
+		dbstore:       store,
 	}
 }
 
 func (n NSQClient) Publish(topic string, message []byte) error {
-	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64){
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		n.mqLatency.Observe(v)
 	}))
 	defer timer.ObserveDuration()
