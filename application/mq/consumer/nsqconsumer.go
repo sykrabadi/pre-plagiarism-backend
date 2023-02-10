@@ -11,7 +11,7 @@ type Handler struct {
 func InitNSQSubscriber(
 	client nsqmq.INSQClient,
 ) {
-	err := client.Subscribe("TESTAGAIN")
+	err := client.Subscribe("update-document")
 	if err != nil {
 		log.Println(err)
 		return

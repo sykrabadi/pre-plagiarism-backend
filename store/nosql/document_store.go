@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-nsq/application/mq"
 	"go-nsq/db"
+	"go-nsq/model"
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -41,8 +42,7 @@ func (c *DocumentStoreService) UpdateData(ctx context.Context, payload mq.MQSubs
 	}
 
 	boundingBoxes := bson.A{}
-	for idx, val := range payload.BoundingBoxes{
-		log.Printf("[%v]:%v \n", idx, val)
+	for _, val := range payload.BoundingBoxes{
 		bb := bson.D{
 			{"rect", bson.D{
 				{"x1", val.X1},
@@ -75,4 +75,19 @@ func (c *DocumentStoreService) UpdateData(ctx context.Context, payload mq.MQSubs
 		return err
 	}
 	return nil
+}
+
+func (c *DocumentStoreService) GetDocument(filename string) (*model.GetDocumentResponse, error){
+	coll := c.conn.Db.Collection("documents")
+	filter := bson.D{
+		{Key:"name", Value:filename},
+	}
+	var res model.GetDocumentResponse
+	err := coll.FindOne(context.TODO(), filter).Decode(&res)
+	if err != nil{
+		log.Printf("[DocumentStoreService.GetDocument] error retrieving document from mongodb with error %v \n", err)
+		return nil, err
+	}
+	log.Println(res)
+	return &res, nil
 }

@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"encoding/json"
 	"go-nsq/application/entrypoint"
 	"go-nsq/model"
@@ -42,7 +43,7 @@ func NewHTTPServer(
 		entryPointService: entryPointService,
 	}
 	router.HandleFunc("/sendDocument", server.SendDocument).Methods(http.MethodPost)
-	router.HandleFunc("/showDocument", server.ShowDocument).Methods(http.MethodGet)
+	router.HandleFunc("/showDocument/{documentName}", server.ShowDocument).Methods(http.MethodGet)
 	router.Handle("/metrics", promhttp.Handler())
 
 	return router
@@ -71,7 +72,7 @@ func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	err = s.entryPointService.SendData(fileHeader)
+	filename, err := s.entryPointService.SendData(fileHeader)
 
 	if err != nil {
 		log.Println("Error sending data")
@@ -83,9 +84,21 @@ func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
 	log.Println("Upload Document Success")
 	httpWriteResponse(w, &model.ServerResponse{
 		Message: "Success",
+		File_Name: filename,
 	})
 }
 
 func (s *server) ShowDocument(w http.ResponseWriter, r *http.Request){
-
+	params := mux.Vars(r)
+	documentName := params["documentName"]
+	res, err := s.entryPointService.GetDocument(context.TODO(), documentName)
+	if err != nil{
+		log.Printf("[server.ShowDocument] unable to GetDocument with error %v \n", err)
+		return
+	}
+	// TODO : fix data marshalling
+	httpWriteResponse(w, &model.ServerResponse{
+		Message: "Success",
+		Data: res,
+	})
 }

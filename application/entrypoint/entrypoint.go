@@ -10,12 +10,15 @@ import (
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/externalapi/preplagiarism"
+	"go-nsq/model"
 	"go-nsq/store"
 	"go-nsq/store/minio"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // SendToRest simulates data transfer using REST API
@@ -53,18 +56,19 @@ func NewEntryPointService(
 	}
 }
 
-func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
+func (c *EntryPointService) SendData(file *multipart.FileHeader) (*string, error) {
 	// TODO : Use fileObjectID as value to be sent to mq
+	file.Filename = uuid.NewString()
 	fileObjectID, err := c.DBStore.DocumentStore().SendData(file.Filename)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	fileName, err := c.Minio.UploadFile(file)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	message := mq.MQPublishMessage{
 		Timestamp:    time.Now().String(),
@@ -75,12 +79,12 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	res, err := json.Marshal(message)
 	if err != nil {
 		log.Println("Error marshalling to json payload at EntryPointService-SendData")
-		return err
+		return nil, err
 	}
 	err = c.NSQ.Publish("TESTAGAIN", res)
 	if err != nil {
 		log.Printf("Error sending message to NSQ with error %v", err)
-		return err
+		return nil, err
 	}
 	// err = c.RabbitMQ.Publish("TESTAGAIN", res)
 	// if err != nil {
@@ -101,15 +105,14 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) error {
 	// if err != nil {
 	// 	log.Fatalf("error at EntryPoint with error %v \n", err)
 	// }
-	return nil
+	return &file.Filename, nil
 }
 
-func (c *EntryPointService) UpdateData(ctx context.Context, objectID string) error {
-	// fromHexID, _ := primitive.ObjectIDFromHex(objectID)
-	// id := primitive.ObjectID.String(fromHexID)
-	// err := c.DBStore.DocumentStore().UpdateData(ctx, id)
-	// if err != nil {
-	// 	return err
-	// }
-	return nil
+func (c *EntryPointService) GetDocument(ctx context.Context, filename  string) (*model.GetDocumentResponse,error)  {
+	res, err := c.DBStore.DocumentStore().GetDocument(filename)
+	if err != nil {
+		log.Printf("[EntryPointService.GetDocument] error retrieve single document with error %v \n", err)
+		return nil, err
+	}
+	return res, nil
 }

@@ -7,6 +7,7 @@ import (
 	"go-nsq/application/mq/rabbitmq"
 	"go-nsq/application/mq/redis"
 	"go-nsq/externalapi/preplagiarism"
+	"go-nsq/model"
 	"go-nsq/store"
 	"go-nsq/store/minio"
 	"mime/multipart"
@@ -23,6 +24,6 @@ type EntryPointService struct {
 }
 
 type IEntryPointService interface {
-	SendData(*multipart.FileHeader) error
-	UpdateData(context.Context, string) error
+	SendData(*multipart.FileHeader) (*string, error)
+	GetDocument(context.Context, string) (*model.GetDocumentResponse, error)
 }
