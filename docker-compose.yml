@@ -10,6 +10,8 @@ services:
       - MINIO_ROOT_USER=${MINIO_ACCESS_KEY_ID}
       - MINIO_ROOT_PASSWORD=${MINIO_SECRET_ACCESS_KEY}
     command: server /data --console-address ":9001"
+    networks:
+        - rabbitmq_go_net
   nsqlookupd:
     image: nsqio/nsq
     container_name: nsqlookupd
@@ -17,6 +19,8 @@ services:
     ports:
       - "4160:4160"
       - "4161:4161"
+    networks:
+        - rabbitmq_go_net
   nsqd:
     image: nsqio/nsq
     container_name: nsqd
@@ -29,6 +33,8 @@ services:
     ports:
       - "4150:4150"
       - "4151:4151"
+    networks:
+        - rabbitmq_go_net
   nsqadmin:
     image: nsqio/nsq
     container_name: nsqadmin
@@ -40,6 +46,8 @@ services:
       - graphite
     ports:
       - "4171:4171"
+    networks:
+        - rabbitmq_go_net
   redis:
     image: redis:7.0.5-alpine
     container_name: redis
@@ -48,6 +56,8 @@ services:
       - "6379:6379"
     volumes:
       - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+        - rabbitmq_go_net
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -67,11 +77,16 @@ services:
       - rabbitmq_go_net
     environment:
       RABBIT_URL: "http://127.0.0.1:15672/"
+    networks:
+        - rabbitmq_go_net
   mongodb:
     image: mongo:6.0.2
     ports:
       - 27017:27017
     command: mongod
+    container_name: mongodb
+    networks:
+        - rabbitmq_go_net
   graphite:
     image: graphiteapp/graphite-statsd:1.1.10-3
     container_name: graphite
@@ -81,6 +96,8 @@ services:
       - 2023-2024:2023-2024
       - 8125:8125/udp
       - 8126:8126
+    networks:
+        - rabbitmq_go_net
   nsq_exporter:
     container_name: nsq_exporter
     image: lovoo/nsq_exporter
@@ -91,6 +108,8 @@ services:
     command:
       - '-nsqd.addr=http://nsqd:4151/stats'
       - '-collect=stats.topics,stats.channels'
+    networks:
+        - rabbitmq_go_net
   # Source : https://hub.docker.com/r/bitnami/kafka
   zookeeper:
     image: 'bitnami/zookeeper:3.8-debian-11'
@@ -98,6 +117,8 @@ services:
       - '2181:2181'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+        - rabbitmq_go_net
   kafka:
     image: 'bitnami/kafka:3.2-debian-11'
     ports:
@@ -110,6 +131,8 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
+    networks:
+        - rabbitmq_go_net
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
@@ -124,6 +147,8 @@ services:
       - kafka
       - rabbitmq
       - nsqd
+    networks:
+        - rabbitmq_go_net
   prometheus:
     image: prom/prometheus:v2.39.0
     ports:
@@ -132,6 +157,40 @@ services:
       - ./config:/etc/prometheus
     depends_on:
       - cadvisor
+    networks:
+        - rabbitmq_go_net
+  pre-plagiarism-backend:
+    build: .
+    ports:
+      - 8000:8000
+    depends_on:
+      - mongodb
+      - minio
+      - redis
+      - rabbitmq
+      - kafka
+    environment:
+      - MONGODB_USERNAME=sykrabadi
+      - MONGODB_PASSWORD=namanyajugamahasiswa
+      - MONGODB_CLUSTER=cluster0.5phjtrc.mongodb.net/?retryWrites=true&w=majority
+      - MONGODB_DB_NAME=documents
+
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY_ID=Q3AM3UQ867SPQQA43P2F
+      - MINIO_SECRET_ACCESS_KEY=zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
+      - MINIO_BUCKET=documents
+
+      - SERVER_ADDR = 8000
+
+      - RABBITMQ_URL_ADDRESS=amqp://guest:guest@rabbitmq:5672/
+
+      - KAFKA_BROKER_ADDR=kafka:9092
+
+      - MONGODB_INITDB_ROOT_USERNAME=root
+      - MONGODB_INITDB_ROOT_PASSWORD=root
+      - MONGODB_INITDB_ROOT_DATABASE=documents
+    networks:
+        - rabbitmq_go_net
 
 networks:
   rabbitmq_go_net:

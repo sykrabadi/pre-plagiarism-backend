@@ -123,7 +123,7 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 		n.mqLatency.Observe(v)
 	}))
 	defer timer.ObserveDuration()
-	publisher, err := nsq.NewProducer("127.0.0.1:4150", &n.config)
+	publisher, err := nsq.NewProducer("nsqd:4150", &n.config)
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func (n NSQClient) Subscribe(topic string) error {
 	nsqSubscriber.AddHandler(&NSQMessageHandler{n.dbstore})
 
 	// either localhost or 127.0.0.1 as address are acceptable, but prefere 127.0.0.1 for consistency
-	nsqSubscriber.ConnectToNSQLookupd("127.0.0.1:4161")
+	nsqSubscriber.ConnectToNSQLookupd("nsqlookupd:4161")
 
 	return nil
 }
