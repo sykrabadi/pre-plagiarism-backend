@@ -63,17 +63,22 @@ func (s *server) SendDocument(w http.ResponseWriter, r *http.Request) {
 		timer.ObserveDuration()
 	}()
 	if err := r.ParseMultipartForm(4096); err != nil {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	file, fileHeader, err := r.FormFile("file")
+	r.Body = http.MaxBytesReader(w, r.Body, 5 * 1024 * 1024)
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
+	fileContentType := fileHeader.Header.Get("Content-Type")
+	if fileContentType != "application/pdf"{
+		http.Error(w, "content-type must be application/pdf", http.StatusInternalServerError)
+		return
+	}
 	filename, err := s.entryPointService.SendData(fileHeader)
-
 	if err != nil {
 		log.Println("Error sending data")
 		httpWriteResponse(w, &model.ServerResponse{
