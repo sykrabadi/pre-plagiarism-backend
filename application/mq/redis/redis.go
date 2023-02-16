@@ -3,11 +3,14 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"go-nsq/application/mq"
 	"log"
+	"os"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -29,15 +32,27 @@ type RedisClient struct {
 }
 
 func NewRedisClient() (IRedisClient, error) {
+	err := godotenv.Load("./.env")
+	containerAddr := os.Getenv("REDIS_CONTAINER_ADDR")
+	var redisAddr string
+	if containerAddr == ""{
+		redisAddr = "localhost"
+	}else{
+		redisAddr = containerAddr
+	}
+	if err != nil {
+		log.Printf("[NewRedisClient()] unable to read .env file with error, %v \n", err)
+		return nil, err
+	}
 	config := redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     fmt.Sprintf("%v:6379",redisAddr),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	}
 
 	rdb := redis.NewClient(&config)
 
-	_, err := rdb.Ping(context.TODO()).Result()
+	_, err = rdb.Ping(context.TODO()).Result()
 
 	if err != nil {
 		log.Println(err)

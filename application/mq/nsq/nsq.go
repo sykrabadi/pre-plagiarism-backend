@@ -3,11 +3,14 @@ package nsq
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"go-nsq/application/mq"
 	"go-nsq/store"
 	"log"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	nsq "github.com/nsqio/go-nsq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -69,10 +72,33 @@ type NSQClient struct {
 	msgCounterVec prometheus.CounterVec
 	mqLatency     prometheus.Histogram
 	dbstore       store.Store
+	nsqdAddr string
+	nsqlookupdAddr string
 }
 
 func NewNSQClient(store store.Store) INSQClient {
 	config := nsq.NewConfig()
+	err := godotenv.Load("./.env")
+	if err != nil {
+		log.Fatalf("[NewNSQClient] unable to create NSQ client with error %v \n", err)
+		return nil
+	}
+	nsqdContainerAddr := os.Getenv("NSQD_CONTAINER_ADDR")
+	nsqlookupdContainerAddr := os.Getenv("NSQLOOKPD_CONTAINER_ADDR")
+	var nsqdAddr string
+	var nsqlookupdAddr string
+	
+	if nsqdContainerAddr == ""{
+		nsqdAddr = "localhost"
+	}else{
+		nsqdAddr = nsqdContainerAddr
+	}
+
+	if nsqlookupdContainerAddr == ""{
+		nsqlookupdAddr = "localhost"
+	}else{
+		nsqlookupdAddr = nsqlookupdContainerAddr
+	}
 	// after adding config.DialTimeout, NSQ will not throw i/o timeout anymore
 	config.DialTimeout = 3 * time.Second
 	reg := prometheus.NewRegistry()
@@ -94,7 +120,7 @@ func NewNSQClient(store store.Store) INSQClient {
 		},
 	)
 	// Register msgCounter metric
-	err := prometheus.Register(msgCounter)
+	err = prometheus.Register(msgCounter)
 	if err != nil {
 		log.Printf("Fail to register NSQ message counter with error: %v", err)
 		return nil
@@ -115,6 +141,8 @@ func NewNSQClient(store store.Store) INSQClient {
 		msgCounterVec: *msgCounterVec,
 		mqLatency:     msgHistogram,
 		dbstore:       store,
+		nsqdAddr: nsqdAddr,
+		nsqlookupdAddr: nsqlookupdAddr,
 	}
 }
 
@@ -123,7 +151,8 @@ func (n NSQClient) Publish(topic string, message []byte) error {
 		n.mqLatency.Observe(v)
 	}))
 	defer timer.ObserveDuration()
-	publisher, err := nsq.NewProducer("127.0.0.1:4150", &n.config)
+	producerAdd := fmt.Sprintf("%v:4150", n.nsqdAddr)
+	publisher, err := nsq.NewProducer(producerAdd, &n.config)
 	if err != nil {
 		return err
 	}
@@ -146,7 +175,8 @@ func (n NSQClient) Subscribe(topic string) error {
 	nsqSubscriber.AddHandler(&NSQMessageHandler{n.dbstore})
 
 	// either localhost or 127.0.0.1 as address are acceptable, but prefere 127.0.0.1 for consistency
-	nsqSubscriber.ConnectToNSQLookupd("127.0.0.1:4161")
+	lookupdAddr := fmt.Sprintf("%v:4161", n.nsqlookupdAddr)
+	nsqSubscriber.ConnectToNSQLookupd(lookupdAddr)
 
 	return nil
 }

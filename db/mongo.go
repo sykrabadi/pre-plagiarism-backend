@@ -53,10 +53,22 @@ func InitMongoDB(ctx context.Context) (*Mongo, error) {
 	if err != nil {
 		log.Fatalf("An error encountered with error message %s", err)
 	}
-
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	err = godotenv.Load("./.env")
 	if err != nil {
-		return nil, fmt.Errorf("An error encountered : %s", err)
+		log.Fatalf("[InitMongoDB] unable to load env file with error %v \n", err)
+		return nil, err
+	}
+	mongodbContainerAddr := os.Getenv("MONGODB_CONTAINER_ADDRESS")
+	var mongodbAddr string
+	if mongodbContainerAddr == ""{
+		mongodbAddr = "localhost"
+	}else{
+		mongodbAddr = mongodbContainerAddr
+	}
+	uri := fmt.Sprintf("mongodb://%v:27017", mongodbAddr)
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+	if err != nil {
+		return nil, fmt.Errorf("[InitMongoDB] unable to connect to mongodb with error : %s", err)
 	}
 
 	dbName := client.Database(db)
@@ -64,7 +76,7 @@ func InitMongoDB(ctx context.Context) (*Mongo, error) {
 	// check connectivity via ping
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("An error encountered : %s", err)
+		return nil, fmt.Errorf("[InitMongoDB] unable to ping to mongodb with error : %s", err)
 	}
 	log.Printf("Successfully connected with number of client : %d", client.NumberSessionsInProgress())
 
