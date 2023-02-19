@@ -51,6 +51,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
+    hostname: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -132,6 +133,43 @@ services:
       - ./config:/etc/prometheus
     depends_on:
       - cadvisor
+  pre-plagiarism-backend:
+    build: .
+    container_name: pre-plagiarsim-backend
+    ports:
+      - 8000:8000
+    depends_on:
+      - mongodb
+      - minio
+      - nsqd
+      - nsqlookupd
+      - kafka
+      - rabbitmq
+      - prometheus
+    environment:
+      - MONGODB_USERNAME=sykrabadi
+      - MONGODB_PASSWORD=namanyajugamahasiswa
+      - MONGODB_CLUSTER=cluster0.5phjtrc.mongodb.net/?retryWrites=true&w=majority
+      - MONGODB_DB_NAME=documents
+      - MONGODB_CONTAINER_ADDRESS=mongodb
+
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY_ID=Q3AM3UQ867SPQQA43P2F
+      - MINIO_SECRET_ACCESS_KEY=zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
+      - MINIO_BUCKET=documents
+
+      - SERVER_ADDR = 8000
+
+      - RABBITMQ_URL_ADDRESS=amqp://guest:guest@rabbitmq-container-rabbitmq:5672/
+
+      - KAFKA_BROKER_ADDR=kafka:9092
+
+      - MONGODB_INITDB_ROOT_USERNAME=root
+      - MONGODB_INITDB_ROOT_PASSWORD=root
+      - MONGODB_INITDB_ROOT_DATABASE=documents
+      - NSQD_ADDR=nsqd
+      - NSQLOOKUPD_ADDR=nsqlookupd
+      - REDIS_CONTAINER_ADDR=redis
 
 networks:
   rabbitmq_go_net:

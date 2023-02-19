@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	nsq "github.com/nsqio/go-nsq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -78,13 +77,13 @@ type NSQClient struct {
 
 func NewNSQClient(store store.Store) INSQClient {
 	config := nsq.NewConfig()
-	err := godotenv.Load("./.env")
-	if err != nil {
-		log.Fatalf("[NewNSQClient] unable to create NSQ client with error %v \n", err)
-		return nil
-	}
-	nsqdContainerAddr := os.Getenv("NSQD_CONTAINER_ADDR")
-	nsqlookupdContainerAddr := os.Getenv("NSQLOOKPD_CONTAINER_ADDR")
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("[NewNSQClient] unable to create NSQ client with error %v \n", err)
+	// 	return nil
+	// }
+	nsqdContainerAddr := os.Getenv("NSQD_ADDR")
+	nsqlookupdContainerAddr := os.Getenv("NSQLOOKPD_ADDR")
 	var nsqdAddr string
 	var nsqlookupdAddr string
 	
@@ -120,7 +119,7 @@ func NewNSQClient(store store.Store) INSQClient {
 		},
 	)
 	// Register msgCounter metric
-	err = prometheus.Register(msgCounter)
+	err := prometheus.Register(msgCounter)
 	if err != nil {
 		log.Printf("Fail to register NSQ message counter with error: %v", err)
 		return nil
