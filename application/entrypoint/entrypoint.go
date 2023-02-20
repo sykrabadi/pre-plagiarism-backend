@@ -82,30 +82,41 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) (*string, error
 		log.Println("Error marshalling to json payload at EntryPointService-SendData")
 		return nil, err
 	}
-	err = c.NSQ.Publish("TESTAGAIN", res)
+
+	// Send to NSQ
+	// err = c.NSQ.Publish("send-document", res)
+	// if err != nil {
+	// 	log.Printf("Error sending message to NSQ with error %v", err)
+	// 	return nil, err
+	// }
+
+	// Send to RabbitMQ
+	err = c.RabbitMQ.Publish("send-document", res)
 	if err != nil {
-		log.Printf("Error sending message to NSQ with error %v", err)
+		log.Printf("Error sending message to RabbitMQ with error %v", err)
 		return nil, err
 	}
-	// err = c.RabbitMQ.Publish("TESTAGAIN", res)
-	// if err != nil {
-	// 	log.Printf("Error sending message to RabbitMQ with error %v", err)
-	// 	return err
-	// }
-	// err = c.Kafka.Publish("TESTAGAIN", res)
+
+	// Send to Kafka
+	// err = c.Kafka.Publish("send-document", res)
 	// if err != nil {
 	// 	log.Printf("Error sending message to Kafka with error %v", err)
 	// 	return err
 	// }
+
+	// WARNING : In order to send to REST server, do not use code below. Use 
+	// c.PrePlagiarismClient.SendToRest() instead
 	// err = SendToRest(res)
 	// if err != nil {
 	// 	log.Printf("Error sending message to REST server with error %v", err)
 	// 	return nil, err
 	// }
-	err = c.PrePlagiarismClient.SendToRest(res)
-	if err != nil {
-		log.Fatalf("error at EntryPoint with error %v \n", err)
-	}
+
+	// Send to REST
+	// err = c.PrePlagiarismClient.SendToRest(res)
+	// if err != nil {
+	// 	log.Fatalf("error at EntryPoint with error %v \n", err)
+	// }
 	return &file.Filename, nil
 }
 

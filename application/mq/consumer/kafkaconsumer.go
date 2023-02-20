@@ -6,7 +6,7 @@ import (
 )
 
 func InitKafkaSubscriber(client kafka.IKafkaClient,){
-	err := client.Subscribe("TESTAGAIN")
+	err := client.Subscribe("update-document")
 	if err != nil{
 		log.Printf("Error when subscribe to Kafka with topic : %v", err)
 		return

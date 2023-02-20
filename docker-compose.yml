@@ -184,7 +184,7 @@ services:
       - MINIO_SECRET_ACCESS_KEY=zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
       - MINIO_BUCKET=documents
 
-      - SERVER_ADDR = 8000
+      - SERVER_ADDR=8000
 
       - RABBITMQ_URL_ADDRESS=amqp://guest:guest@rabbitmq:5672/
 

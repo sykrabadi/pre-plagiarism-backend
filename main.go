@@ -22,7 +22,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 )
 
 // TODO : Seperate current function calls to concurrent
@@ -30,15 +29,10 @@ import (
 func serveHTTP(
 	entrypointService entrypoint.IEntryPointService,
 ) {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Printf("[serveHTTP] unable to load .env file with error %v \n", err)
-		return
-	}
 	serverAddr := os.Getenv("SERVER_ADDR")
 	router := mux.NewRouter()
 	serve := transport.NewHTTPServer(router, entrypointService)
-	err = http.ListenAndServe(fmt.Sprintf(":%v", serverAddr), serve)
+	err := http.ListenAndServe(fmt.Sprintf(":%v", serverAddr), serve)
 	if err != nil {
 		log.Fatalf("Error connecting to %v", serverAddr)
 	}

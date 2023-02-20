@@ -8,7 +8,7 @@ import (
 func InitRabbitMQSubscriber(
 	client rabbitmq.IRabbitMQClient,
 ) {
-	err := client.Subscribe("TESTAGAIN")
+	err := client.Subscribe("update-document")
 	if err != nil {
 		log.Println(err)
 		return
