@@ -33,6 +33,7 @@ func SendToRest(data []byte) error {
 		log.Fatalf("error sending data with error : %v", err)
 	}
 	defer resp.Body.Close()
+	log.Printf("sending data to rest with payload %v \n", payload)
 	return nil
 }
 
@@ -99,12 +100,12 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) (*string, error
 	// err = SendToRest(res)
 	// if err != nil {
 	// 	log.Printf("Error sending message to REST server with error %v", err)
-	// 	return err
+	// 	return nil, err
 	// }
-	// err = c.PrePlagiarismClient.SendToRest(res)
-	// if err != nil {
-	// 	log.Fatalf("error at EntryPoint with error %v \n", err)
-	// }
+	err = c.PrePlagiarismClient.SendToRest(res)
+	if err != nil {
+		log.Fatalf("error at EntryPoint with error %v \n", err)
+	}
 	return &file.Filename, nil
 }
 

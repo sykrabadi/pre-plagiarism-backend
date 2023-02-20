@@ -42,8 +42,8 @@ func NewHTTPServer(
 	server := server{
 		entryPointService: entryPointService,
 	}
-	router.HandleFunc("/sendDocument", server.SendDocument).Methods(http.MethodPost)
-	router.HandleFunc("/showDocument/{documentName}", server.ShowDocument).Methods(http.MethodGet)
+	router.HandleFunc("/send-document", server.SendDocument).Methods(http.MethodPost)
+	router.HandleFunc("/show-document/{documentName}", server.ShowDocument).Methods(http.MethodGet)
 	router.Handle("/metrics", promhttp.Handler())
 
 	return router
