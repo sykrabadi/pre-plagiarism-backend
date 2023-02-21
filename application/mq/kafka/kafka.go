@@ -1,6 +1,10 @@
 package kafka
 
 import (
+	"context"
+	"encoding/json"
+	"go-nsq/application/mq"
+	"go-nsq/store"
 	"log"
 	"os"
 	"os/signal"
@@ -21,9 +25,10 @@ type KafkaClient struct {
 	consumer sarama.Consumer
 	msgCounter prometheus.Counter
 	mqLatency prometheus.Histogram
+	dbstore store.Store
 }
 
-func NewKafkaClient() (IKafkaClient, error){
+func NewKafkaClient(store store.Store) (IKafkaClient, error){
 	conf := sarama.NewConfig()
 	conf.Producer.Return.Successes = true
 	conf.Producer.RequiredAcks = sarama.WaitForAll
@@ -58,22 +63,24 @@ func NewKafkaClient() (IKafkaClient, error){
 	// Register msgCounter metric
 	prometheus.Register(msgCounter)
 	prometheus.Register(msgHistogram)
-	return KafkaClient{
+	return &KafkaClient{
 		client: conn,
 		consumer: consumer,
 		msgCounter: msgCounter,
 		mqLatency: msgHistogram,
+		dbstore: store,
 	}, nil
 }
 
-func (k KafkaClient) Publish(topic string, message []byte) error{
+func (k *KafkaClient) Publish(topic string, message []byte) error{
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64){
 		k.mqLatency.Observe(v)
 	}))
 	defer timer.ObserveDuration()
+	val := sarama.ByteEncoder(message)
 	msg := sarama.ProducerMessage{
 		Topic: topic,
-		Value: sarama.StringEncoder(message),
+		Value: val,
 	}
 	_, _, err := k.client.SendMessage(&msg)
 	if err != nil {
@@ -84,7 +91,7 @@ func (k KafkaClient) Publish(topic string, message []byte) error{
 	return nil
 }
 
-func (k KafkaClient) Subscribe(topic string) error{
+func (k *KafkaClient) Subscribe(topic string) error{
 	subscriber, err := k.consumer.ConsumePartition(topic, 0, sarama.OffsetOldest)
 	if err != nil {
 		log.Printf("Fail to consume partition from Kafka with error:%v", err)
@@ -94,14 +101,27 @@ func (k KafkaClient) Subscribe(topic string) error{
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
+	var response mq.MQSubscribeMessage
+	
 	doneCh := make(chan struct{})
-	go func(){
+	go func() error{
 		for{
 			select{
 			case err := <-subscriber.Errors():
 				log.Printf("Fail to Subscribe from Kafka with error:%v", err)
+				return err
 			case msg := <-subscriber.Messages():
 				log.Printf("Consuming message from topic:%v | message: %v", string(msg.Topic), string(msg.Value))
+				err = json.Unmarshal(msg.Value, &response)
+				if err != nil {
+					log.Printf("Error when unmarshalling json at [KafkaClient.Subscribe] with error : %v", err)
+					return err
+				}
+				err = k.dbstore.DocumentStore().UpdateData(context.TODO(), response)
+				if err != nil {
+					log.Printf("[NSQMessageHandler.HandleMessage] error when update data with error %v \n", err)
+					return err
+				}
 			case <-sigchan:
 				err = k.consumer.Close()
 				if err != nil {

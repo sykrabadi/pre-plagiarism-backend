@@ -84,25 +84,26 @@ func (c *EntryPointService) SendData(file *multipart.FileHeader) (*string, error
 	}
 
 	// Send to NSQ
-	// err = c.NSQ.Publish("send-document", res)
-	// if err != nil {
-	// 	log.Printf("Error sending message to NSQ with error %v", err)
-	// 	return nil, err
-	// }
-
-	// Send to RabbitMQ
-	err = c.RabbitMQ.Publish("send-document", res)
+	err = c.NSQ.Publish("send-document", res)
 	if err != nil {
-		log.Printf("Error sending message to RabbitMQ with error %v", err)
+		log.Printf("Error sending message to NSQ with error %v", err)
 		return nil, err
 	}
 
-	// Send to Kafka
-	// err = c.Kafka.Publish("send-document", res)
+	// Send to RabbitMQ
+	// err = c.RabbitMQ.Publish("send-document", res)
 	// if err != nil {
-	// 	log.Printf("Error sending message to Kafka with error %v", err)
-	// 	return err
+	// 	log.Printf("Error sending message to RabbitMQ with error %v", err)
+	// 	log.Printf("Error sending message to RabbitMQ with error %v", err)
+	// 	return nil, err
 	// }
+
+	// Send to Kafka
+	err = c.Kafka.Publish("send-document", res)
+	if err != nil {
+		log.Printf("Error sending message to Kafka with error %v", err)
+		return nil, err
+	}
 
 	// WARNING : In order to send to REST server, do not use code below. Use 
 	// c.PrePlagiarismClient.SendToRest() instead

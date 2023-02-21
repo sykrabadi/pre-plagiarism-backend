@@ -63,7 +63,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error intialize RabbitMQ Client with error : %v", err)
 	}
-	kafkaClient, err := kafka.NewKafkaClient()
+	kafkaClient, err := kafka.NewKafkaClient(mongoDBStore)
 	if err != nil {
 		log.Fatalf("Error intialize Kafka Client with error : %v", err)
 	}

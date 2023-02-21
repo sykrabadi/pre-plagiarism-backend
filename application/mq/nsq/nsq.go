@@ -58,8 +58,7 @@ func (h *NSQMessageHandler) HandleMessage(m *nsq.Message) error {
 		return err
 	}
 
-	log.Println("Logging message from NSQMessageHandler")
-	log.Println(response.FileObjectID)
+	log.Printf("[NSQMessageHandler.HandleMessage] Success update document with objectID: %v \n", response.FileObjectID)
 
 	// Returning a non-nil error will automatically send a REQ command to NSQ to re-queue the message.
 	return nil
