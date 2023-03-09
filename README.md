@@ -1,4 +1,4 @@
-# go-nsq
+# Pre-Plagiarism Backend
 
 ## System Architecure
 ![assets\system_architecture.jpg](assets/system_architecture.jpg)
